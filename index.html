@@ -247,7 +247,6 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       <button data-v="ofertas" onclick="go('ofertas')">Ofertas</button>
       <button data-v="carnet" onclick="go('carnet')">Mi carnet</button>
       <button data-v="negocios" onclick="go('negocios')">Negocios</button>
-      <button data-v="validar" onclick="go('validar')">Validar</button>
       <button data-v="admin" onclick="go('admin')">Admin</button>
     </div>
     <div class="sess" id="sessBox"><span class="dot"></span><span id="sessTxt">Invitado</span></div>
@@ -480,24 +479,6 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 </div>
 
 <!-- ============ VALIDAR ============ -->
-<div class="view" id="v-validar">
-  <div class="wrap">
-    <section class="block" style="border-top:none;padding-top:48px">
-      <div style="max-width:480px;margin:0 auto">
-        <div class="eyebrow" style="text-align:center">Punto de venta</div>
-        <h2 style="text-align:center">Validar membresía</h2>
-        <p class="lead" style="text-align:center;margin:0 auto 24px">Escanea el QR del carnet o ingresa el número de miembro para confirmar que está activo.</p>
-        <div class="panel" style="padding:24px">
-          <div class="field"><label>Número de miembro o código QR</label><input id="valInput" placeholder="EC-2026-0001" style="font-family:'JetBrains Mono';letter-spacing:1px" onkeydown="if(event.key==='Enter')validateMember()"></div>
-          <button class="btn btn-gold btn-block" onclick="validateMember()">Validar</button>
-          <div class="vresult" id="valResult"></div>
-        </div>
-        <p class="note" style="text-align:center">Para una demo: copia el número de miembro desde la pestaña <b>Mi carnet</b>. En la app real, la cámara del teléfono lee el QR automáticamente.</p>
-      </div>
-    </section>
-  </div>
-</div>
-
 <!-- ============ ADMIN ============ -->
 <div class="view" id="v-admin">
   <div class="wrap">
@@ -525,7 +506,17 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
           <div class="stat"><b id="sMembers">0</b><small>Miembros</small></div>
           <div class="stat"><b id="sBiz">0</b><small>Negocios</small></div>
           <div class="stat"><b id="sOffers">0</b><small>Ofertas</small></div>
-          <div class="stat"><b id="sCoupons">0</b><small>Cupones usados</small></div>
+          <div class="stat"><b id="sCoupons">0</b><small>Usos de cupones</small></div>
+        </div>
+
+        <div class="panel" style="padding:24px;margin-bottom:34px">
+          <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:4px">Validar miembro o cupón</h3>
+          <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Ingresa el número de miembro (o escanea su QR) para ver su nombre y estatus, o un código de cupón para verificarlo.</p>
+          <div style="max-width:520px">
+            <div class="field"><label>Número de miembro, QR o código de cupón</label><input id="valInput" placeholder="EC-2026-0001  /  EC-XXXX-XXXX" style="font-family:'JetBrains Mono';letter-spacing:1px" onkeydown="if(event.key==='Enter')validateMember()"></div>
+            <button class="btn btn-gold btn-block" onclick="validateMember()">Validar</button>
+            <div class="vresult" id="valResult"></div>
+          </div>
         </div>
 
         <div class="grid g2" style="align-items:start;margin-bottom:34px">
@@ -544,7 +535,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
           <div class="panel" style="padding:24px">
             <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Cupones existentes</h3>
             <div style="max-height:380px;overflow:auto">
-              <table id="couponTable"><thead><tr><th>Código</th><th>Tipo</th><th>Estado</th></tr></thead><tbody></tbody></table>
+              <table id="couponTable"><thead><tr><th>Código</th><th>Tipo</th><th>Estado</th><th>Usos</th><th></th></tr></thead><tbody></tbody></table>
             </div>
           </div>
         </div>
@@ -661,7 +652,7 @@ async function seed(){
     DB.biz.push({id:bid,name:s.name,cat:s.cat,email:s.email,phone:s.phone,created:Date.now()});
     DB.counters.offer++; DB.offers.push({id:'O'+DB.counters.offer,bizId:bid,biz:s.name,cat:s.cat,title:s.title,terms:s.terms,created:Date.now()});
   });
-  DB.coupons['EC-DEMO-2026'] = {type:'member',used:false,note:'Cupón de prueba',created:Date.now()};
+  DB.coupons['EC-DEMO-2026'] = {type:'member',active:true,note:'Cupón de prueba',created:Date.now(),uses:[]};
   await save();
 }
 
@@ -734,9 +725,9 @@ async function registerMember(){
     const code=$('#jCoupon').value.trim().toUpperCase();
     const c=DB.coupons[code];
     if(!c){ showAlert('joinAlert','Cupón no válido.','err'); return; }
-    if(c.used){ showAlert('joinAlert','Ese cupón ya fue usado.','err'); return; }
+    if(c.active===false){ showAlert('joinAlert','Ese cupón está desactivado.','err'); return; }
     if(c.type!=='member'){ showAlert('joinAlert','Ese cupón es para negocios, no para membresía.','err'); return; }
-    c.used=true; c.usedBy=email; method='cupón'; couponCode=code;
+    c.uses=c.uses||[]; c.uses.push({name, email, role:'member', at:Date.now()}); method='cupón'; couponCode=code;
   }
   DB.counters.member++;
   const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, tier:'MIEMBRO', method, couponCode, exp:expDate(), token:genToken(), created:Date.now() };
@@ -778,9 +769,9 @@ async function registerBusiness(){
   if(bizMethod==='coupon'){
     const code=$('#bCoupon').value.trim().toUpperCase(); const c=DB.coupons[code];
     if(!c){ showAlert('bizAlert','Cupón no válido.','err'); return; }
-    if(c.used){ showAlert('bizAlert','Ese cupón ya fue usado.','err'); return; }
+    if(c.active===false){ showAlert('bizAlert','Ese cupón está desactivado.','err'); return; }
     if(c.type!=='business'){ showAlert('bizAlert','Ese cupón es para membresías, no para negocios.','err'); return; }
-    c.used=true; c.usedBy=email; method='cupón';
+    c.uses=c.uses||[]; c.uses.push({name, email, role:'business', at:Date.now()}); method='cupón';
   }
   DB.counters.business++;
   const b={ id:'B'+DB.counters.business, name, cat, email, phone, method, created:Date.now() };
@@ -820,17 +811,35 @@ function logoutBusiness(){ DB.session=null; Store.set(K.session,null); applySess
 function validateMember(){
   const raw=$('#valInput').value.trim().toUpperCase();
   const box=$('#valResult');
+  if(!raw){ box.className='vresult'; box.innerHTML=''; return; }
+  box.className='vresult show';
+
+  // ¿Es un cupón?
+  const c=DB.coupons[raw];
+  if(c){
+    const active=c.active!==false; const uses=(c.uses||[]);
+    box.innerHTML=`<div class="vcard ${active?'valid':'invalid'}"><h3>${active?'✓ Cupón activo':'✕ Cupón inactivo'}</h3>
+      <div style="margin-top:12px">
+        <div class="vrow"><span>Código</span><span style="font-family:'JetBrains Mono'">${esc(raw)}</span></div>
+        <div class="vrow"><span>Tipo</span><span>${c.type==='member'?'Membresía':'Negocio'}</span></div>
+        <div class="vrow"><span>Estatus</span><span>${active?'Activo':'Inactivo'}</span></div>
+        <div class="vrow"><span>Veces usado</span><span>${uses.length}</span></div>
+      </div>
+      ${uses.length?`<div style="margin-top:12px;font-size:13px;color:var(--muted)"><b>Usado por:</b><br>${uses.map(u=>esc(u.name)+' · '+esc(u.email)).join('<br>')}</div>`:''}</div>`;
+    return;
+  }
+
+  // ¿Es un miembro?
   let num=raw, token=null;
   if(raw.startsWith('CIRCULO|')){ const p=raw.split('|'); num=p[1]; token=p[2]; }
   const m=DB.members.find(x=>x.num.toUpperCase()===num);
-  if(!m){ box.className='vresult show'; box.innerHTML=`<div class="vcard invalid"><h3>✕ No válida</h3><p style="color:var(--muted);margin-top:6px">No existe ningún miembro con ese número. Verifica el código.</p></div>`; return; }
-  if(token && token!==m.token){ box.className='vresult show'; box.innerHTML=`<div class="vcard invalid"><h3>✕ Código alterado</h3><p style="color:var(--muted);margin-top:6px">El QR no coincide con el número de miembro.</p></div>`; return; }
-  box.className='vresult show';
+  if(!m){ box.innerHTML=`<div class="vcard invalid"><h3>✕ No encontrado</h3><p style="color:var(--muted);margin-top:6px">No existe ningún miembro ni cupón con ese código.</p></div>`; return; }
+  if(token && token!==m.token){ box.innerHTML=`<div class="vcard invalid"><h3>✕ Código alterado</h3><p style="color:var(--muted);margin-top:6px">El QR no coincide con el número de miembro.</p></div>`; return; }
   box.innerHTML=`<div class="vcard valid"><h3>✓ Membresía válida</h3>
     <div style="margin-top:12px">
       <div class="vrow"><span>Miembro</span><span>${esc(m.name)}</span></div>
       <div class="vrow"><span>Número</span><span style="font-family:'JetBrains Mono'">${esc(m.num)}</span></div>
-      <div class="vrow"><span>Tier</span><span>${esc(m.tier)}</span></div>
+      <div class="vrow"><span>Estatus</span><span>Activa</span></div>
       <div class="vrow"><span>Válida hasta</span><span>${esc(m.exp)}</span></div>
     </div>
     <button class="btn btn-gold btn-sm btn-block" style="margin-top:16px" onclick="confirmRedeem(this)">Registrar canje y aplicar descuento</button></div>`;
@@ -844,11 +853,17 @@ function renderAdmin(){
   $('#sMembers').textContent=DB.members.length;
   $('#sBiz').textContent=DB.biz.length;
   $('#sOffers').textContent=DB.offers.length;
-  const used=Object.values(DB.coupons).filter(c=>c.used).length;
-  $('#sCoupons').textContent=used;
+  const totalUses=Object.values(DB.coupons).reduce((s,c)=>s+((c.uses||[]).length),0);
+  $('#sCoupons').textContent=totalUses;
 
   const ct=$('#couponTable tbody'); const codes=Object.keys(DB.coupons);
-  ct.innerHTML = codes.length ? codes.map(code=>{ const c=DB.coupons[code]; return `<tr><td><code style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(code)}</code></td><td>${c.type==='member'?'Miembro':'Negocio'}</td><td>${c.used?'<span class="badge muted">Usado</span>':'<span class="badge ok">Disponible</span>'}</td></tr>`; }).join('') : '<tr><td colspan="3" class="empty">Sin cupones aún.</td></tr>';
+  ct.innerHTML = codes.length ? codes.map(code=>{
+    const c=DB.coupons[code]; const active=c.active!==false; const uses=(c.uses||[]);
+    const statusBadge = active ? '<span class="badge ok">● Activo</span>' : '<span class="badge muted">○ Inactivo</span>';
+    const main = `<tr><td><code style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(code)}</code></td><td>${c.type==='member'?'Miembro':'Negocio'}</td><td>${statusBadge}</td><td>${uses.length}${uses.length?` <button class="copy-b" onclick="toggleUses('${code}')">ver</button>`:''}</td><td><button class="copy-b" onclick="toggleCoupon('${code}')">${active?'Desactivar':'Activar'}</button></td></tr>`;
+    const detail = uses.length ? `<tr id="uses-${code}" style="display:none"><td colspan="5" style="background:var(--bg2)"><div style="font-size:12.5px;color:var(--muted);padding:4px 2px;line-height:1.7">${uses.map(u=>`${esc(u.name)} · ${esc(u.email)} · ${new Date(u.at).toLocaleDateString('es')}`).join('<br>')}</div></td></tr>` : '';
+    return main+detail;
+  }).join('') : '<tr><td colspan="5" class="empty">Sin cupones aún.</td></tr>';
 
   const mt=$('#memberTable tbody');
   mt.innerHTML = DB.members.length ? DB.members.map(m=>`<tr><td style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(m.num)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.tier)}</td><td>${new Date(m.created).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin miembros aún.</td></tr>';
@@ -860,11 +875,14 @@ function renderAdmin(){
 async function generateCoupons(){
   const type=$('#cType').value, qty=Math.min(50,Math.max(1,parseInt($('#cQty').value)||1)), note=$('#cNote').value.trim();
   const made=[];
-  for(let i=0;i<qty;i++){ let code; do{ code=genCode(); }while(DB.coupons[code]); DB.coupons[code]={type,used:false,note,created:Date.now()}; made.push(code); }
+  for(let i=0;i<qty;i++){ let code; do{ code=genCode(); }while(DB.coupons[code]); DB.coupons[code]={type,active:true,note,created:Date.now(),uses:[]}; made.push(code); }
   await save();
   $('#newCodes').innerHTML = `<div style="font-size:12.5px;color:var(--muted);margin:6px 0 2px">${made.length} cupón(es) generado(s) — cópialos y compártelos:</div>` + made.map(c=>`<div class="code-row"><code>${c}</code><button class="copy-b" onclick="navigator.clipboard.writeText('${c}');this.textContent='✓ Copiado'">Copiar</button></div>`).join('');
   renderAdmin();
 }
+
+async function toggleCoupon(code){ const c=DB.coupons[code]; if(!c) return; const cur=c.active!==false; c.active=!cur; await save(); renderAdmin(); }
+function toggleUses(code){ const r=document.getElementById('uses-'+code); if(r) r.style.display=(r.style.display==='none'?'table-row':'none'); }
 
 async function resetAll(){
   if(!confirm('¿Borrar todos los datos de la demo y volver a empezar?')) return;
