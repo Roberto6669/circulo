@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Círculo · Club Exclusivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#14110E; --bg2:#1B1712; --surface:#1F1A15; --surface2:#272019;
+    --line:#34291E; --line2:#473826;
+    --gold:#C9A227; --gold-lt:#E8C85A; --gold-dk:#8A6D23;
+    --cream:#F5EFE3; --muted:#9A8F7D; --muted2:#6E6354;
+    --ok:#3DA35D; --ok-bg:#15281B; --err:#C84B31; --err-bg:#2A1713;
+    --radius:14px; --maxw:1120px;
+    --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(900px 500px at 80% -120px, rgba(201,162,39,.13), transparent 60%),
+      radial-gradient(700px 400px at 0% 10%, rgba(201,162,39,.05), transparent 55%),
+      var(--bg);
+    color:var(--cream); font-family:'Inter',system-ui,sans-serif; line-height:1.55;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:15px}
+  ::selection{background:var(--gold);color:#1a160f}
+
+  /* ---------- Nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:40;
+    background:rgba(20,17,14,.82);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:26px}
+  .brand{display:flex;align-items:center;gap:11px;font-family:'Inter',sans-serif;font-weight:700;font-size:18px;letter-spacing:.2em;text-transform:uppercase}
+  .brand .key{width:26px;height:26px;flex:none}
+  .brand b{color:var(--gold-lt)}
+  .nav-links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .nav-links button{
+    padding:8px 14px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);transition:.18s;
+  }
+  .nav-links button:hover{color:var(--cream);background:var(--surface)}
+  .nav-links button.active{color:var(--gold-lt);background:var(--surface)}
+  .sess{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding-left:6px;border-left:1px solid var(--line);margin-left:4px}
+  .sess .dot{width:7px;height:7px;border-radius:50%;background:var(--muted2)}
+  .sess.in .dot{background:var(--ok)}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .view{display:none;animation:fade .4s ease}
+  .view.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-family:'Fraunces',serif;font-weight:600;line-height:1.04;letter-spacing:-.5px}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:30px;letter-spacing:-.4px;margin-bottom:6px}
+  .lead{color:var(--muted);font-size:17px;max-width:46ch}
+
+  /* ---------- Hero ---------- */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center;padding:72px 0 56px}
+  .hero h1{font-size:clamp(40px,6vw,62px)}
+  .hero h1 em{font-style:normal;color:var(--gold-lt)}
+  .hero .lead{margin:22px 0 30px;font-size:18px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-meta{display:flex;gap:30px;margin-top:34px;padding-top:26px;border-top:1px solid var(--line)}
+  .hero-meta div span{display:block;font-family:'Fraunces',serif;font-size:26px;color:var(--gold-lt);font-weight:600}
+  .hero-meta div small{color:var(--muted);font-size:13px}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 22px;border-radius:11px;font-weight:600;font-size:15px;transition:.18s;white-space:nowrap;
+  }
+  .btn-gold{background:linear-gradient(135deg,var(--gold-lt),var(--gold));color:#1a160f;box-shadow:0 8px 22px -8px rgba(201,162,39,.6)}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(201,162,39,.75)}
+  .btn-ghost{background:var(--surface);border:1px solid var(--line2);color:var(--cream)}
+  .btn-ghost:hover{border-color:var(--gold);color:var(--gold-lt)}
+  .btn-sm{padding:9px 15px;font-size:13.5px;border-radius:9px}
+  .btn-block{width:100%}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  /* ---------- The Card (signature) ---------- */
+  .card-stage{display:flex;justify-content:center;perspective:1400px}
+  .card{
+    position:relative;width:370px;max-width:100%;aspect-ratio:1.586;border-radius:20px;
+    padding:24px 26px;color:#241c10;overflow:hidden;
+    background:
+      linear-gradient(135deg,#6b5418 0%,#9c7a26 16%,#d8b341 34%,#f4e6ad 50%,#cba12a 66%,#8a6d23 84%,#5e4a18 100%);
+    box-shadow:0 26px 60px -22px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 6px rgba(0,0,0,.25);
+    transform:rotateY(-13deg) rotateX(6deg);transition:transform .5s cubic-bezier(.2,.7,.2,1);
+    display:flex;flex-direction:column;
+  }
+  .card.flat{transform:none}
+  .card-stage:hover .card{transform:rotateY(-4deg) rotateX(2deg)}
+  .card::after{ /* guilloché texture */
+    content:"";position:absolute;inset:0;opacity:.16;mix-blend-mode:overlay;pointer-events:none;
+    background-image:repeating-radial-gradient(circle at 30% 20%, #000 0 1px, transparent 1px 7px),
+      repeating-linear-gradient(60deg,#000 0 1px,transparent 1px 9px);
+  }
+  .card .sheen{
+    position:absolute;top:-60%;left:-30%;width:50%;height:220%;pointer-events:none;
+    background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-18deg);animation:sheen 5.5s ease-in-out infinite;
+  }
+  @keyframes sheen{0%,100%{left:-40%}45%{left:130%}55%{left:130%}}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:2}
+  .card-brand{font-family:'Inter',sans-serif;font-weight:700;font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:#2a2110;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+  .card-brand small{display:block;font-family:'Inter';font-weight:600;font-size:8.5px;letter-spacing:.28em;color:#4a3a16;margin-top:1px}
+  .card-tier{font-size:9.5px;font-weight:700;letter-spacing:.18em;background:#241c10;color:var(--gold-lt);padding:4px 9px;border-radius:20px}
+  .chip{width:38px;height:28px;border-radius:6px;margin:16px 0 6px;position:relative;z-index:2;
+    background:linear-gradient(135deg,#e8d28a,#b8902f);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+  .chip::before{content:"";position:absolute;inset:5px 6px;border-radius:3px;
+    background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(0,0,0,.22) 4px 5px),
+      repeating-linear-gradient(90deg,transparent 0 5px,rgba(0,0,0,.22) 5px 6px)}
+  .card-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:20px;letter-spacing:1.5px;color:#241c10;
+    text-shadow:0 1px 0 rgba(255,255,255,.45), 0 -1px 1px rgba(0,0,0,.18);position:relative;z-index:2;margin-top:2px}
+  .card-bottom{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:2;gap:12px}
+  .card-bottom .lbl{font-size:7.5px;letter-spacing:.2em;font-weight:600;color:#4a3a16}
+  .card-bottom .val{font-size:13px;font-weight:600;color:#2a2110;text-transform:uppercase;letter-spacing:.04em}
+  .card-qr{background:#fff;padding:5px;border-radius:7px;line-height:0;box-shadow:0 2px 8px rgba(0,0,0,.3);flex:none}
+  .card-qr img,.card-qr canvas{display:block;border-radius:2px}
+
+  /* ---------- Sections / cards ---------- */
+  section.block{padding:56px 0;border-top:1px solid var(--line)}
+  .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;gap:16px;flex-wrap:wrap}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+  .grid{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+
+  /* Offer card */
+  .offer{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;transition:.2s;overflow:hidden}
+  .offer:hover{border-color:var(--line2);transform:translateY(-3px)}
+  .offer .cat{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .offer .biz{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:5px 0 12px}
+  .offer .deal{font-family:'Fraunces',serif;font-size:26px;color:var(--gold-lt);font-weight:600;line-height:1.1}
+  .offer .terms{color:var(--muted);font-size:13.5px;margin-top:8px;min-height:38px}
+  .offer .foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .offer.locked .deal,.offer.locked .terms{filter:blur(7px);user-select:none}
+  .lock-ov{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,rgba(31,26,21,.2),rgba(31,26,21,.78));text-align:center;padding:20px}
+  .lock-ov svg{width:26px;height:26px;color:var(--gold)}
+  .lock-ov p{font-size:13.5px;color:var(--cream);max-width:22ch}
+
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.02em}
+  .badge.ok{background:var(--ok-bg);color:#7bd49a;border:1px solid #234a30}
+  .badge.muted{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+  .badge.gold{background:rgba(201,162,39,.13);color:var(--gold-lt);border:1px solid var(--gold-dk)}
+
+  /* Forms */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+  .field input,.field select,.field textarea{
+    width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;color:var(--cream);transition:.15s}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.14)}
+  .field input::placeholder,.field textarea::placeholder{color:var(--muted2)}
+  .seg{display:flex;gap:8px;background:var(--bg2);padding:5px;border-radius:11px;border:1px solid var(--line2)}
+  .seg button{flex:1;padding:10px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--muted);transition:.15s}
+  .seg button.on{background:var(--surface2);color:var(--gold-lt);box-shadow:0 1px 0 rgba(255,255,255,.05)}
+
+  .note{font-size:12.5px;color:var(--muted2);margin-top:10px;line-height:1.5}
+  .divider{display:flex;align-items:center;gap:14px;color:var(--muted2);font-size:12px;margin:18px 0;text-transform:uppercase;letter-spacing:.12em}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .alert{padding:12px 15px;border-radius:10px;font-size:14px;margin-bottom:14px;display:none;animation:fade .25s}
+  .alert.show{display:block}
+  .alert.ok{background:var(--ok-bg);color:#8fdca8;border:1px solid #234a30}
+  .alert.err{background:var(--err-bg);color:#e89b88;border:1px solid #5a2a1d}
+
+  /* Validate result */
+  .vresult{display:none;margin-top:18px}
+  .vresult.show{display:block;animation:fade .3s}
+  .vcard{border-radius:var(--radius);padding:22px;border:1px solid}
+  .vcard.valid{background:var(--ok-bg);border-color:#2c5c3c}
+  .vcard.invalid{background:var(--err-bg);border-color:#6a3022}
+  .vcard h3{font-family:'Fraunces',serif;font-size:22px;display:flex;align-items:center;gap:10px}
+  .vrow{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(255,255,255,.07);font-size:14px}
+  .vrow:first-of-type{border-top:none}
+  .vrow span:first-child{color:var(--muted)}
+  .vrow span:last-child{font-weight:600}
+
+  /* Admin */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .stat b{font-family:'Fraunces',serif;font-size:34px;color:var(--gold-lt);font-weight:600;display:block;line-height:1}
+  .stat small{color:var(--muted);font-size:12.5px;letter-spacing:.04em}
+  .code-list{display:grid;gap:8px;margin-top:16px}
+  .code-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:11px 14px}
+  .code-row code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold-lt);letter-spacing:.5px}
+  .copy-b{font-size:12px;color:var(--muted);padding:5px 10px;border-radius:7px;border:1px solid var(--line2)}
+  .copy-b:hover{color:var(--gold-lt);border-color:var(--gold)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:11px 12px;border-bottom:1px solid var(--line)}
+  .empty{color:var(--muted2);font-size:14px;text-align:center;padding:34px;font-style:italic}
+
+  footer{border-top:1px solid var(--line);margin-top:30px;padding:30px 0;color:var(--muted2);font-size:13px}
+  .foot-in{max-width:var(--maxw);margin:0 auto;padding:0 22px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(8,6,4,.7);backdrop-filter:blur(4px);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-bg.show{display:flex;animation:fade .2s}
+  .modal{background:var(--bg2);border:1px solid var(--line2);border-radius:18px;max-width:440px;width:100%;padding:30px;box-shadow:var(--shadow);max-height:92vh;overflow:auto}
+  .modal h2{font-size:25px}
+  .modal .x{position:absolute;top:16px;right:18px;font-size:22px;color:var(--muted);width:34px;height:34px;border-radius:8px}
+  .modal .x:hover{background:var(--surface);color:var(--cream)}
+  .modal-wrap{position:relative}
+
+  @media(max-width:860px){
+    .hero{grid-template-columns:1fr;gap:36px;padding:44px 0 36px;text-align:center}
+    .hero .lead{margin-left:auto;margin-right:auto}
+    .hero-cta,.hero-meta{justify-content:center}
+    .card{transform:none}
+    .g3,.g2{grid-template-columns:1fr}
+    .stat-grid{grid-template-columns:repeat(2,1fr)}
+    .nav-links{order:3;width:100%;justify-content:center}
+    .sess{margin:0 auto}
+    h2{font-size:25px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="brand" onclick="go('inicio')" style="cursor:pointer">
+      <svg class="key" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.2" stroke="var(--gold-lt)" stroke-width="1.5"/><circle cx="12" cy="12" r="5.2" stroke="var(--gold-lt)" stroke-width="1.5"/><circle cx="12" cy="12" r="1.7" fill="var(--gold-lt)"/></svg>
+      <b>CÍRCULO</b>
+    </div>
+    <div class="nav-links" id="navlinks">
+      <button data-v="inicio" class="active" onclick="go('inicio')">Inicio</button>
+      <button data-v="ofertas" onclick="go('ofertas')">Ofertas</button>
+      <button data-v="carnet" onclick="go('carnet')">Mi carnet</button>
+      <button data-v="negocios" onclick="go('negocios')">Negocios</button>
+      <button data-v="validar" onclick="go('validar')">Validar</button>
+      <button data-v="admin" onclick="go('admin')">Admin</button>
+    </div>
+    <div class="sess" id="sessBox"><span class="dot"></span><span id="sessTxt">Invitado</span></div>
+  </div>
+</nav>
+
+<!-- ============ INICIO ============ -->
+<div class="view show" id="v-inicio">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Club privado de beneficios · Miami</div>
+        <h1>Estás dentro del <em>círculo</em>.</h1>
+        <p class="lead">El club privado donde los miembros pagan menos. Descuentos reales en restaurantes, servicios y negocios de todo Miami — solo por pertenecer. Muestra tu carnet y ahorra al instante.</p>
+        <div class="hero-cta">
+          <button class="btn btn-gold" onclick="openJoin('member')">Hazte miembro</button>
+          <button class="btn btn-ghost" onclick="openJoin('business')">Soy un negocio</button>
+        </div>
+        <div class="hero-meta">
+          <div><span id="mMembers">0</span><small>Miembros activos</small></div>
+          <div><span id="mBiz">0</span><small>Negocios aliados</small></div>
+          <div><span id="mOffers">0</span><small>Ofertas vigentes</small></div>
+        </div>
+      </div>
+      <div class="card-stage">
+        <div class="card" id="heroCard">
+          <div class="sheen"></div>
+          <div class="card-top">
+            <div class="card-brand">CÍRCULO<small>CLUB EXCLUSIVO</small></div>
+            <div class="card-tier">FUNDADOR</div>
+          </div>
+          <div class="chip"></div>
+          <div class="card-num">EC-2026-0001</div>
+          <div class="card-bottom">
+            <div>
+              <div class="lbl">MIEMBRO</div>
+              <div class="val">Roberto Escobar</div>
+              <div class="lbl" style="margin-top:7px">VÁLIDA HASTA</div>
+              <div class="val">06 / 27</div>
+            </div>
+            <div class="card-qr" id="heroQR"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="eyebrow">Cómo funciona</div>
+          <h2>Tres pasos para empezar a ahorrar</h2>
+        </div>
+      </div>
+      <div class="grid g3">
+        <div class="panel" style="padding:24px">
+          <div class="badge gold">Paso 1</div>
+          <h3 style="font-family:Fraunces;font-size:20px;margin:12px 0 6px">Activa tu membresía</h3>
+          <p style="color:var(--muted);font-size:14.5px">Regístrate con un cupón de regalo o una cuota anual. Recibes tu carnet digital al instante.</p>
+        </div>
+        <div class="panel" style="padding:24px">
+          <div class="badge gold">Paso 2</div>
+          <h3 style="font-family:Fraunces;font-size:20px;margin:12px 0 6px">Explora las ofertas</h3>
+          <p style="color:var(--muted);font-size:14.5px">Mira todos los descuentos de negocios aliados. Solo los miembros ven los detalles.</p>
+        </div>
+        <div class="panel" style="padding:24px">
+          <div class="badge gold">Paso 3</div>
+          <h3 style="font-family:Fraunces;font-size:20px;margin:12px 0 6px">Muestra tu QR y ahorra</h3>
+          <p style="color:var(--muted);font-size:14.5px">El negocio escanea tu carnet, valida tu número de miembro y aplica el descuento.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="eyebrow">Aliados</div>
+          <h2>Ofertas destacadas</h2>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="go('ofertas')">Ver todas →</button>
+      </div>
+      <div class="grid g3" id="featuredOffers"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ OFERTAS ============ -->
+<div class="view" id="v-ofertas">
+  <div class="wrap">
+    <section class="block" style="border-top:none;padding-top:48px">
+      <div class="sec-head">
+        <div>
+          <div class="eyebrow">Catálogo</div>
+          <h2>Todas las ofertas</h2>
+          <p class="lead" id="ofertasSub">Descuentos vigentes en negocios aliados.</p>
+        </div>
+        <button class="btn btn-gold btn-sm" id="ofertasCta" onclick="openJoin('member')">Hazte miembro para ver</button>
+      </div>
+      <div class="grid g3" id="allOffers"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ MI CARNET ============ -->
+<div class="view" id="v-carnet">
+  <div class="wrap">
+    <section class="block" style="border-top:none;padding-top:48px">
+      <div id="carnetEmpty">
+        <div class="eyebrow">Mi carnet</div>
+        <h2>Accede a tu membresía</h2>
+        <p class="lead" style="margin-bottom:22px">Ingresa el correo con el que te registraste para ver tu carnet digital, o hazte miembro si aún no tienes uno.</p>
+        <div class="panel" style="padding:24px;max-width:420px">
+          <div class="alert err" id="lookupAlert"></div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" id="lookupEmail" placeholder="tucorreo@ejemplo.com">
+          </div>
+          <button class="btn btn-gold btn-block" onclick="lookupMember()">Ver mi carnet</button>
+          <div class="divider">o</div>
+          <button class="btn btn-ghost btn-block" onclick="openJoin('member')">Hazte miembro</button>
+        </div>
+      </div>
+
+      <div id="carnetShow" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center" class="carnet-layout">
+          <div class="card-stage">
+            <div class="card flat" id="memberCard">
+              <div class="sheen"></div>
+              <div class="card-top">
+                <div class="card-brand">CÍRCULO<small>CLUB EXCLUSIVO</small></div>
+                <div class="card-tier" id="mcTier">MIEMBRO</div>
+              </div>
+              <div class="chip"></div>
+              <div class="card-num" id="mcNum">EC-2026-0000</div>
+              <div class="card-bottom">
+                <div>
+                  <div class="lbl">MIEMBRO</div>
+                  <div class="val" id="mcName">—</div>
+                  <div class="lbl" style="margin-top:7px">VÁLIDA HASTA</div>
+                  <div class="val" id="mcExp">—</div>
+                </div>
+                <div class="card-qr" id="mcQR"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="eyebrow">Membresía activa</div>
+            <h2 id="mcGreet">Hola</h2>
+            <p class="lead" style="margin-bottom:18px">Muestra este carnet en cualquier negocio aliado. El comercio escanea tu código QR o ingresa tu número de miembro para aplicar el descuento.</p>
+            <div class="grid g2" style="margin-bottom:18px">
+              <div class="panel" style="padding:16px"><small style="color:var(--muted);font-size:12px">Número de miembro</small><div style="font-family:'JetBrains Mono';font-size:16px;color:var(--gold-lt);margin-top:4px" id="mcNum2">—</div></div>
+              <div class="panel" style="padding:16px"><small style="color:var(--muted);font-size:12px">Estado</small><div style="margin-top:6px"><span class="badge ok">● Activa</span></div></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-gold btn-sm" onclick="go('ofertas')">Ver ofertas</button>
+              <button class="btn btn-ghost btn-sm" onclick="logoutMember()">Cerrar carnet</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ NEGOCIOS ============ -->
+<div class="view" id="v-negocios">
+  <div class="wrap">
+    <section class="block" style="border-top:none;padding-top:48px">
+      <!-- not logged in as business -->
+      <div id="bizIntro">
+        <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:start" class="carnet-layout">
+          <div>
+            <div class="eyebrow">Para negocios</div>
+            <h2>Llena tu local con miembros del club</h2>
+            <p class="lead" style="margin-bottom:20px">Publica una oferta y aparece frente a cientos de miembros que buscan dónde gastar en Miami. Sin comisiones por venta — una cuota fija anual.</p>
+            <div class="grid" style="gap:12px;margin-bottom:8px">
+              <div style="display:flex;gap:12px;align-items:flex-start"><span class="badge gold" style="margin-top:2px">✓</span><div><b>Visibilidad inmediata</b><div style="color:var(--muted);font-size:14px">Tu oferta entra al catálogo que ven todos los miembros.</div></div></div>
+              <div style="display:flex;gap:12px;align-items:flex-start"><span class="badge gold" style="margin-top:2px">✓</span><div><b>Tú controlas el descuento</b><div style="color:var(--muted);font-size:14px">Defines qué ofreces y los términos. Edítalo cuando quieras.</div></div></div>
+              <div style="display:flex;gap:12px;align-items:flex-start"><span class="badge gold" style="margin-top:2px">✓</span><div><b>Validación con QR</b><div style="color:var(--muted);font-size:14px">Confirma que quien entra es miembro real desde la pestaña Validar.</div></div></div>
+            </div>
+          </div>
+          <div class="panel" style="padding:26px">
+            <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:4px">Registra tu negocio</h3>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Cuota: <b style="color:var(--gold-lt)">$99/año</b> · o usa un cupón de aliado.</p>
+            <div class="alert err" id="bizAlert"></div>
+            <div class="alert ok" id="bizOk"></div>
+            <div class="field"><label>Nombre del negocio</label><input id="bName" placeholder="Café Habana 1958"></div>
+            <div class="field"><label>Categoría</label>
+              <select id="bCat"><option>Restaurante</option><option>Servicios</option><option>Belleza</option><option>Automotriz</option><option>Salud</option><option>Compras</option><option>Entretenimiento</option></select>
+            </div>
+            <div class="field"><label>Correo de contacto</label><input type="email" id="bEmail" placeholder="contacto@negocio.com"></div>
+            <div class="field"><label>Teléfono</label><input id="bPhone" placeholder="(305) 555-0100"></div>
+            <div class="divider">forma de activación</div>
+            <div class="seg" style="margin-bottom:14px"><button class="on" id="bSegCoupon" onclick="bizPay('coupon')">Tengo cupón</button><button id="bSegPay" onclick="bizPay('pay')">Pagar cuota</button></div>
+            <div class="field" id="bCouponField"><label>Código de cupón</label><input id="bCoupon" placeholder="EC-XXXX-XXXX" style="font-family:'JetBrains Mono';letter-spacing:1px"></div>
+            <div id="bPayField" style="display:none"><div class="note" style="margin:0 0 12px">Pago simulado para esta demo. En producción se conecta a Stripe/procesador real.</div></div>
+            <button class="btn btn-gold btn-block" onclick="registerBusiness()">Activar negocio</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- business dashboard -->
+      <div id="bizDash" style="display:none">
+        <div class="sec-head">
+          <div>
+            <div class="eyebrow">Panel de negocio</div>
+            <h2 id="bizDashName">Mi negocio</h2>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="logoutBusiness()">Salir del panel</button>
+        </div>
+        <div class="grid g2" style="align-items:start">
+          <div class="panel" style="padding:24px">
+            <h3 style="font-family:Fraunces;font-size:20px;margin-bottom:14px">Publicar una oferta</h3>
+            <div class="alert ok" id="offerOk"></div>
+            <div class="field"><label>Título del descuento</label><input id="oTitle" placeholder="20% de descuento"></div>
+            <div class="field"><label>Descripción / términos</label><textarea id="oTerms" rows="3" placeholder="En el total de la cuenta. No acumulable con otras promociones."></textarea></div>
+            <button class="btn btn-gold btn-block" onclick="publishOffer()">Publicar oferta</button>
+          </div>
+          <div>
+            <h3 style="font-family:Fraunces;font-size:20px;margin-bottom:14px">Mis ofertas activas</h3>
+            <div id="myOffers" class="grid" style="gap:12px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ VALIDAR ============ -->
+<div class="view" id="v-validar">
+  <div class="wrap">
+    <section class="block" style="border-top:none;padding-top:48px">
+      <div style="max-width:480px;margin:0 auto">
+        <div class="eyebrow" style="text-align:center">Punto de venta</div>
+        <h2 style="text-align:center">Validar membresía</h2>
+        <p class="lead" style="text-align:center;margin:0 auto 24px">Escanea el QR del carnet o ingresa el número de miembro para confirmar que está activo.</p>
+        <div class="panel" style="padding:24px">
+          <div class="field"><label>Número de miembro o código QR</label><input id="valInput" placeholder="EC-2026-0001" style="font-family:'JetBrains Mono';letter-spacing:1px" onkeydown="if(event.key==='Enter')validateMember()"></div>
+          <button class="btn btn-gold btn-block" onclick="validateMember()">Validar</button>
+          <div class="vresult" id="valResult"></div>
+        </div>
+        <p class="note" style="text-align:center">Para una demo: copia el número de miembro desde la pestaña <b>Mi carnet</b>. En la app real, la cámara del teléfono lee el QR automáticamente.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ ADMIN ============ -->
+<div class="view" id="v-admin">
+  <div class="wrap">
+    <section class="block" style="border-top:none;padding-top:48px">
+      <!-- pin gate -->
+      <div id="adminGate" style="max-width:380px;margin:40px auto">
+        <div class="eyebrow" style="text-align:center">Acceso restringido</div>
+        <h2 style="text-align:center">Panel de administración</h2>
+        <div class="panel" style="padding:24px;margin-top:18px">
+          <div class="alert err" id="pinAlert"></div>
+          <div class="field"><label>PIN de administrador</label><input type="password" id="pinInput" placeholder="••••" onkeydown="if(event.key==='Enter')checkPin()"></div>
+          <button class="btn btn-gold btn-block" onclick="checkPin()">Entrar</button>
+          <p class="note">PIN por defecto: <b>2026</b> — cámbialo en el código antes de publicar.</p>
+        </div>
+      </div>
+
+      <!-- admin content -->
+      <div id="adminContent" style="display:none">
+        <div class="sec-head">
+          <div><div class="eyebrow">Administración</div><h2>Panel de control</h2></div>
+          <button class="btn btn-ghost btn-sm" onclick="resetAll()">Reiniciar datos demo</button>
+        </div>
+
+        <div class="stat-grid" style="margin-bottom:34px">
+          <div class="stat"><b id="sMembers">0</b><small>Miembros</small></div>
+          <div class="stat"><b id="sBiz">0</b><small>Negocios</small></div>
+          <div class="stat"><b id="sOffers">0</b><small>Ofertas</small></div>
+          <div class="stat"><b id="sCoupons">0</b><small>Cupones usados</small></div>
+        </div>
+
+        <div class="grid g2" style="align-items:start;margin-bottom:34px">
+          <div class="panel" style="padding:24px">
+            <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:4px">Generar cupones de regalo</h3>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Crea códigos para regalar membresías a clientes o registrar negocios sin cobrar.</p>
+            <div class="field"><label>Tipo de cupón</label>
+              <select id="cType"><option value="member">Membresía (cliente)</option><option value="business">Negocio aliado</option></select>
+            </div>
+            <div class="field"><label>Cantidad</label><input type="number" id="cQty" value="5" min="1" max="50"></div>
+            <div class="field"><label>Nota (opcional)</label><input id="cNote" placeholder="Ej: clientes evento octubre"></div>
+            <button class="btn btn-gold btn-block" onclick="generateCoupons()">Generar cupones</button>
+            <div class="code-list" id="newCodes"></div>
+          </div>
+
+          <div class="panel" style="padding:24px">
+            <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Cupones existentes</h3>
+            <div style="max-height:380px;overflow:auto">
+              <table id="couponTable"><thead><tr><th>Código</th><th>Tipo</th><th>Estado</th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding:24px;margin-bottom:18px">
+          <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Miembros</h3>
+          <div style="overflow:auto"><table id="memberTable"><thead><tr><th>Número</th><th>Nombre</th><th>Correo</th><th>Tier</th><th>Alta</th></tr></thead><tbody></tbody></table></div>
+        </div>
+
+        <div class="panel" style="padding:24px">
+          <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Negocios aliados</h3>
+          <div style="overflow:auto"><table id="bizTable"><thead><tr><th>Negocio</th><th>Categoría</th><th>Contacto</th><th>Ofertas</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-in">
+    <div>Círculo · Club Exclusivo — Miami, FL</div>
+    <div>Hecho por Roberto Escobar Citty · v1.0</div>
+  </div>
+</footer>
+
+<!-- ============ JOIN MODAL ============ -->
+<div class="modal-bg" id="joinModal">
+  <div class="modal-wrap">
+    <div class="modal">
+      <button class="x" onclick="closeJoin()">×</button>
+      <div class="eyebrow" id="joinEyebrow">Membresía</div>
+      <h2 id="joinTitle">Hazte miembro</h2>
+      <p style="color:var(--muted);font-size:14px;margin:6px 0 20px" id="joinSub">Activa tu carnet con un cupón o la cuota anual.</p>
+      <div class="alert err" id="joinAlert"></div>
+      <div id="joinForm">
+        <div class="field"><label>Nombre completo</label><input id="jName" placeholder="Roberto Escobar"></div>
+        <div class="field"><label>Correo electrónico</label><input type="email" id="jEmail" placeholder="tucorreo@ejemplo.com"></div>
+        <div class="field"><label>Teléfono</label><input id="jPhone" placeholder="(305) 555-0100"></div>
+        <div class="divider">forma de activación</div>
+        <div class="seg" style="margin-bottom:14px"><button class="on" id="jSegCoupon" onclick="joinPay('coupon')">Tengo cupón</button><button id="jSegPay" onclick="joinPay('pay')">Pagar cuota</button></div>
+        <div class="field" id="jCouponField"><label>Código de cupón</label><input id="jCoupon" placeholder="EC-XXXX-XXXX" style="font-family:'JetBrains Mono';letter-spacing:1px"></div>
+        <div id="jPayField" style="display:none"><div class="note" style="margin:0 0 12px">Cuota: <b style="color:var(--gold-lt)">$30/año</b>. Pago simulado para esta demo — en producción se conecta a Stripe.</div></div>
+        <button class="btn btn-gold btn-block" onclick="registerMember()">Activar membresía</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   EL CÍRCULO — almacenamiento (window.storage en Claude, localStorage al desplegar)
+   ============================================================ */
+const Store = {
+  has: typeof window.storage !== 'undefined' && window.storage,
+  async get(k, def){
+    try{
+      if(this.has){ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : def; }
+      const v = localStorage.getItem(k); return v ? JSON.parse(v) : def;
+    }catch(e){ return def; }
+  },
+  async set(k, v){
+    try{
+      if(this.has){ await window.storage.set(k, JSON.stringify(v)); }
+      else { localStorage.setItem(k, JSON.stringify(v)); }
+    }catch(e){ console.error('storage', e); }
+  }
+};
+const K = { members:'circulo:members', biz:'circulo:businesses', offers:'circulo:offers', coupons:'circulo:coupons', counters:'circulo:counters', session:'circulo:session', seeded:'circulo:seeded' };
+
+let DB = { members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, session:null };
+
+const ADMIN_PIN = '2026';            // ← cambia esto antes de publicar
+const MEMBER_FEE = 30, BUSINESS_FEE = 99;
+let adminUnlocked = false;
+let joinRole = 'member', joinMethod = 'coupon', bizMethod = 'coupon';
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => (s||'').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+function genCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const p=()=>Array.from({length:4},()=>a[Math.random()*a.length|0]).join(''); return 'EC-'+p()+'-'+p(); }
+function genToken(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>a[Math.random()*a.length|0]).join(''); }
+function memNum(n){ return 'EC-'+new Date().getFullYear()+'-'+String(n).padStart(4,'0'); }
+function expDate(){ const d=new Date(); d.setFullYear(d.getFullYear()+1); return String(d.getMonth()+1).padStart(2,'0')+' / '+String(d.getFullYear()).slice(2); }
+function showAlert(id,msg,type){ const e=$('#'+id); e.textContent=msg; e.className='alert '+type+' show'; setTimeout(()=>e.classList.remove('show'),4200); }
+function makeQR(el,text,size){ el.innerHTML=''; new QRCode(el,{text,width:size,height:size,colorDark:'#14110E',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }
+
+async function save(){ await Store.set(K.members,DB.members); await Store.set(K.biz,DB.biz); await Store.set(K.offers,DB.offers); await Store.set(K.coupons,DB.coupons); await Store.set(K.counters,DB.counters); await Store.set(K.session,DB.session); }
+
+/* ============================================================ INIT */
+async function init(){
+  DB.members  = await Store.get(K.members, []);
+  DB.biz      = await Store.get(K.biz, []);
+  DB.offers   = await Store.get(K.offers, []);
+  DB.coupons  = await Store.get(K.coupons, {});
+  DB.counters = await Store.get(K.counters, {member:0,business:0,offer:0});
+  DB.session  = await Store.get(K.session, null);
+  const seeded = await Store.get(K.seeded, false);
+  if(!seeded){ await seed(); await Store.set(K.seeded, true); }
+  makeQR($('#heroQR'),'EL CÍRCULO',56);
+  renderAll();
+  applySession();
+}
+
+async function seed(){
+  const samples = [
+    {name:'Café Habana 1958', cat:'Restaurante', title:'15% de descuento', terms:'En el total de la cuenta. No acumulable con otras promociones.', email:'hola@habana1958.com', phone:'(305) 555-0158'},
+    {name:'Barbería El Clásico', cat:'Servicios', title:'Corte + barba por $25', terms:'De lunes a jueves. Solo con cita previa.', email:'citas@elclasico.com', phone:'(305) 555-0190'},
+    {name:'Taller AutoPro Miami', cat:'Automotriz', title:'Cambio de aceite desde $39', terms:'Incluye filtro. Vehículos hasta 5 cuartos de aceite.', email:'taller@autopromiami.com', phone:'(305) 555-0111'},
+    {name:'Dulce Caribe Bakery', cat:'Restaurante', title:'2x1 en pasteles', terms:'Válido los martes. Igual o menor valor.', email:'pedidos@dulcecaribe.com', phone:'(305) 555-0177'},
+    {name:'Glow Spa Brickell', cat:'Belleza', title:'30% en tu primera visita', terms:'Clientes nuevos. Reserva con 24h de anticipación.', email:'spa@glowbrickell.com', phone:'(305) 555-0130'}
+  ];
+  samples.forEach(s=>{
+    DB.counters.business++; const bid='B'+DB.counters.business;
+    DB.biz.push({id:bid,name:s.name,cat:s.cat,email:s.email,phone:s.phone,created:Date.now()});
+    DB.counters.offer++; DB.offers.push({id:'O'+DB.counters.offer,bizId:bid,biz:s.name,cat:s.cat,title:s.title,terms:s.terms,created:Date.now()});
+  });
+  DB.coupons['EC-DEMO-2026'] = {type:'member',used:false,note:'Cupón de prueba',created:Date.now()};
+  await save();
+}
+
+/* ============================================================ NAV */
+function go(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));
+  $('#v-'+v).classList.add('show');
+  document.querySelectorAll('.nav-links button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(v==='carnet') renderCarnet();
+  if(v==='negocios') renderBiz();
+  if(v==='admin' && adminUnlocked) renderAdmin();
+}
+
+/* ============================================================ SESSION */
+function applySession(){
+  const s=DB.session, box=$('#sessBox'), txt=$('#sessTxt');
+  if(s && s.role==='member'){ const m=DB.members.find(x=>x.id===s.id); if(m){ box.classList.add('in'); txt.textContent=m.name.split(' ')[0]+' · Miembro'; return; } }
+  if(s && s.role==='business'){ const b=DB.biz.find(x=>x.id===s.id); if(b){ box.classList.add('in'); txt.textContent=b.name+' · Negocio'; return; } }
+  box.classList.remove('in'); txt.textContent='Invitado';
+}
+
+/* ============================================================ RENDER */
+function renderAll(){ renderStatsHero(); renderOffers(); renderCarnet(); renderBiz(); if(adminUnlocked) renderAdmin(); }
+
+function renderStatsHero(){
+  $('#mMembers').textContent=DB.members.length;
+  $('#mBiz').textContent=DB.biz.length;
+  $('#mOffers').textContent=DB.offers.length;
+}
+
+function offerCardHTML(o, unlocked){
+  if(unlocked){
+    return `<div class="offer"><div class="cat">${esc(o.cat)}</div><div class="biz">${esc(o.biz)}</div>
+      <div class="deal">${esc(o.title)}</div><div class="terms">${esc(o.terms)}</div>
+      <div class="foot"><span class="badge ok">● Disponible</span><span class="badge muted">Muestra tu carnet</span></div></div>`;
+  }
+  return `<div class="offer locked"><div class="cat">${esc(o.cat)}</div><div class="biz">${esc(o.biz)}</div>
+    <div class="deal">${esc(o.title)}</div><div class="terms">${esc(o.terms)}</div>
+    <div class="lock-ov"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+      <p>Solo para miembros</p><button class="btn btn-gold btn-sm" onclick="openJoin('member')">Hazte miembro</button></div></div>`;
+}
+
+function renderOffers(){
+  const unlocked = DB.session && DB.session.role==='member';
+  $('#featuredOffers').innerHTML = DB.offers.slice(0,3).map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas.</p>';
+  $('#allOffers').innerHTML = DB.offers.map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas publicadas.</p>';
+  $('#ofertasCta').style.display = unlocked ? 'none':'inline-flex';
+  $('#ofertasSub').textContent = unlocked ? 'Tu membresía está activa. Muestra tu carnet en el local para aplicar el descuento.' : 'Hazte miembro para desbloquear todos los descuentos.';
+}
+
+/* ============================================================ JOIN / MEMBER */
+function openJoin(role){
+  joinRole=role; joinMethod='coupon';
+  $('#joinEyebrow').textContent = role==='business' ? 'Negocio aliado' : 'Membresía';
+  $('#joinTitle').textContent = role==='business' ? 'Registra tu negocio' : 'Hazte miembro';
+  $('#joinSub').textContent = role==='business' ? 'Publica ofertas para los miembros del club.' : 'Activa tu carnet con un cupón o la cuota anual.';
+  if(role==='business'){ closeJoin(); go('negocios'); return; }
+  $('#joinModal').classList.add('show');
+}
+function closeJoin(){ $('#joinModal').classList.remove('show'); }
+function joinPay(m){ joinMethod=m; $('#jSegCoupon').classList.toggle('on',m==='coupon'); $('#jSegPay').classList.toggle('on',m==='pay'); $('#jCouponField').style.display=m==='coupon'?'block':'none'; $('#jPayField').style.display=m==='pay'?'block':'none'; }
+
+async function registerMember(){
+  const name=$('#jName').value.trim(), email=$('#jEmail').value.trim().toLowerCase(), phone=$('#jPhone').value.trim();
+  if(!name||!email){ showAlert('joinAlert','Ingresa tu nombre y correo.','err'); return; }
+  if(DB.members.find(m=>m.email===email)){ showAlert('joinAlert','Ese correo ya tiene una membresía. Búscala en "Mi carnet".','err'); return; }
+  let method='demo', couponCode=null;
+  if(joinMethod==='coupon'){
+    const code=$('#jCoupon').value.trim().toUpperCase();
+    const c=DB.coupons[code];
+    if(!c){ showAlert('joinAlert','Cupón no válido.','err'); return; }
+    if(c.used){ showAlert('joinAlert','Ese cupón ya fue usado.','err'); return; }
+    if(c.type!=='member'){ showAlert('joinAlert','Ese cupón es para negocios, no para membresía.','err'); return; }
+    c.used=true; c.usedBy=email; method='cupón'; couponCode=code;
+  }
+  DB.counters.member++;
+  const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, tier:'MIEMBRO', method, couponCode, exp:expDate(), token:genToken(), created:Date.now() };
+  DB.members.push(m); DB.session={role:'member',id:m.id};
+  await save();
+  closeJoin(); applySession(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+  ['jName','jEmail','jPhone','jCoupon'].forEach(i=>$('#'+i).value='');
+  go('carnet');
+}
+
+function lookupMember(){
+  const email=$('#lookupEmail').value.trim().toLowerCase();
+  const m=DB.members.find(x=>x.email===email);
+  if(!m){ showAlert('lookupAlert','No encontramos una membresía con ese correo.','err'); return; }
+  DB.session={role:'member',id:m.id}; Store.set(K.session,DB.session);
+  applySession(); renderOffers(); renderCarnet();
+}
+function logoutMember(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); }
+
+function renderCarnet(){
+  const isM = DB.session && DB.session.role==='member';
+  const m = isM ? DB.members.find(x=>x.id===DB.session.id) : null;
+  $('#carnetEmpty').style.display = m ? 'none':'block';
+  $('#carnetShow').style.display = m ? 'block':'none';
+  if(!m) return;
+  $('#mcTier').textContent=m.tier; $('#mcNum').textContent=m.num; $('#mcNum2').textContent=m.num;
+  $('#mcName').textContent=m.name; $('#mcExp').textContent=m.exp;
+  $('#mcGreet').textContent='Hola, '+m.name.split(' ')[0];
+  makeQR($('#mcQR'),'CIRCULO|'+m.num+'|'+m.token,60);
+}
+
+/* ============================================================ BUSINESS */
+function bizPay(m){ bizMethod=m; $('#bSegCoupon').classList.toggle('on',m==='coupon'); $('#bSegPay').classList.toggle('on',m==='pay'); $('#bCouponField').style.display=m==='coupon'?'block':'none'; $('#bPayField').style.display=m==='pay'?'block':'none'; }
+
+async function registerBusiness(){
+  const name=$('#bName').value.trim(), cat=$('#bCat').value, email=$('#bEmail').value.trim().toLowerCase(), phone=$('#bPhone').value.trim();
+  if(!name||!email){ showAlert('bizAlert','Ingresa el nombre y correo del negocio.','err'); return; }
+  let method='demo';
+  if(bizMethod==='coupon'){
+    const code=$('#bCoupon').value.trim().toUpperCase(); const c=DB.coupons[code];
+    if(!c){ showAlert('bizAlert','Cupón no válido.','err'); return; }
+    if(c.used){ showAlert('bizAlert','Ese cupón ya fue usado.','err'); return; }
+    if(c.type!=='business'){ showAlert('bizAlert','Ese cupón es para membresías, no para negocios.','err'); return; }
+    c.used=true; c.usedBy=email; method='cupón';
+  }
+  DB.counters.business++;
+  const b={ id:'B'+DB.counters.business, name, cat, email, phone, method, created:Date.now() };
+  DB.biz.push(b); DB.session={role:'business',id:b.id};
+  await save();
+  applySession(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+  ['bName','bEmail','bPhone','bCoupon'].forEach(i=>$('#'+i).value='');
+  renderBiz();
+}
+
+function renderBiz(){
+  const isB = DB.session && DB.session.role==='business';
+  const b = isB ? DB.biz.find(x=>x.id===DB.session.id) : null;
+  $('#bizIntro').style.display = b ? 'none':'block';
+  $('#bizDash').style.display = b ? 'block':'none';
+  if(!b) return;
+  $('#bizDashName').textContent=b.name;
+  const mine=DB.offers.filter(o=>o.bizId===b.id);
+  $('#myOffers').innerHTML = mine.length ? mine.map(o=>`<div class="panel" style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div><div class="cat" style="color:var(--gold)">${esc(o.cat)}</div><div style="font-family:Fraunces;font-size:18px;color:var(--gold-lt);margin:2px 0 4px">${esc(o.title)}</div><div style="color:var(--muted);font-size:13px">${esc(o.terms)}</div></div><button class="copy-b" onclick="deleteOffer('${o.id}')">Eliminar</button></div></div>`).join('') : '<p class="empty">Aún no has publicado ofertas.</p>';
+}
+
+async function publishOffer(){
+  const b=DB.biz.find(x=>x.id===DB.session.id);
+  const title=$('#oTitle').value.trim(), terms=$('#oTerms').value.trim();
+  if(!title){ showAlert('offerOk','Escribe el título del descuento.','err'); return; }
+  DB.counters.offer++;
+  DB.offers.push({id:'O'+DB.counters.offer,bizId:b.id,biz:b.name,cat:b.cat,title,terms:terms||'Consulta términos en el local.',created:Date.now()});
+  await save();
+  $('#oTitle').value=''; $('#oTerms').value='';
+  showAlert('offerOk','Oferta publicada. Ya es visible para los miembros.','ok');
+  renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+}
+async function deleteOffer(id){ DB.offers=DB.offers.filter(o=>o.id!==id); await save(); renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin(); }
+function logoutBusiness(){ DB.session=null; Store.set(K.session,null); applySession(); renderBiz(); }
+
+/* ============================================================ VALIDATE */
+function validateMember(){
+  const raw=$('#valInput').value.trim().toUpperCase();
+  const box=$('#valResult');
+  let num=raw, token=null;
+  if(raw.startsWith('CIRCULO|')){ const p=raw.split('|'); num=p[1]; token=p[2]; }
+  const m=DB.members.find(x=>x.num.toUpperCase()===num);
+  if(!m){ box.className='vresult show'; box.innerHTML=`<div class="vcard invalid"><h3>✕ No válida</h3><p style="color:var(--muted);margin-top:6px">No existe ningún miembro con ese número. Verifica el código.</p></div>`; return; }
+  if(token && token!==m.token){ box.className='vresult show'; box.innerHTML=`<div class="vcard invalid"><h3>✕ Código alterado</h3><p style="color:var(--muted);margin-top:6px">El QR no coincide con el número de miembro.</p></div>`; return; }
+  box.className='vresult show';
+  box.innerHTML=`<div class="vcard valid"><h3>✓ Membresía válida</h3>
+    <div style="margin-top:12px">
+      <div class="vrow"><span>Miembro</span><span>${esc(m.name)}</span></div>
+      <div class="vrow"><span>Número</span><span style="font-family:'JetBrains Mono'">${esc(m.num)}</span></div>
+      <div class="vrow"><span>Tier</span><span>${esc(m.tier)}</span></div>
+      <div class="vrow"><span>Válida hasta</span><span>${esc(m.exp)}</span></div>
+    </div>
+    <button class="btn btn-gold btn-sm btn-block" style="margin-top:16px" onclick="confirmRedeem(this)">Registrar canje y aplicar descuento</button></div>`;
+}
+function confirmRedeem(btn){ btn.textContent='✓ Descuento aplicado'; btn.disabled=true; btn.style.opacity=.7; }
+
+/* ============================================================ ADMIN */
+function checkPin(){ if($('#pinInput').value===ADMIN_PIN){ adminUnlocked=true; $('#adminGate').style.display='none'; $('#adminContent').style.display='block'; renderAdmin(); } else showAlert('pinAlert','PIN incorrecto.','err'); }
+
+function renderAdmin(){
+  $('#sMembers').textContent=DB.members.length;
+  $('#sBiz').textContent=DB.biz.length;
+  $('#sOffers').textContent=DB.offers.length;
+  const used=Object.values(DB.coupons).filter(c=>c.used).length;
+  $('#sCoupons').textContent=used;
+
+  const ct=$('#couponTable tbody'); const codes=Object.keys(DB.coupons);
+  ct.innerHTML = codes.length ? codes.map(code=>{ const c=DB.coupons[code]; return `<tr><td><code style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(code)}</code></td><td>${c.type==='member'?'Miembro':'Negocio'}</td><td>${c.used?'<span class="badge muted">Usado</span>':'<span class="badge ok">Disponible</span>'}</td></tr>`; }).join('') : '<tr><td colspan="3" class="empty">Sin cupones aún.</td></tr>';
+
+  const mt=$('#memberTable tbody');
+  mt.innerHTML = DB.members.length ? DB.members.map(m=>`<tr><td style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(m.num)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.tier)}</td><td>${new Date(m.created).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin miembros aún.</td></tr>';
+
+  const bt=$('#bizTable tbody');
+  bt.innerHTML = DB.biz.length ? DB.biz.map(b=>{ const n=DB.offers.filter(o=>o.bizId===b.id).length; return `<tr><td>${esc(b.name)}</td><td>${esc(b.cat)}</td><td>${esc(b.email)}</td><td>${n}</td></tr>`; }).join('') : '<tr><td colspan="4" class="empty">Sin negocios aún.</td></tr>';
+}
+
+async function generateCoupons(){
+  const type=$('#cType').value, qty=Math.min(50,Math.max(1,parseInt($('#cQty').value)||1)), note=$('#cNote').value.trim();
+  const made=[];
+  for(let i=0;i<qty;i++){ let code; do{ code=genCode(); }while(DB.coupons[code]); DB.coupons[code]={type,used:false,note,created:Date.now()}; made.push(code); }
+  await save();
+  $('#newCodes').innerHTML = `<div style="font-size:12.5px;color:var(--muted);margin:6px 0 2px">${made.length} cupón(es) generado(s) — cópialos y compártelos:</div>` + made.map(c=>`<div class="code-row"><code>${c}</code><button class="copy-b" onclick="navigator.clipboard.writeText('${c}');this.textContent='✓ Copiado'">Copiar</button></div>`).join('');
+  renderAdmin();
+}
+
+async function resetAll(){
+  if(!confirm('¿Borrar todos los datos de la demo y volver a empezar?')) return;
+  DB={ members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, session:null };
+  await Store.set(K.seeded,false); await save();
+  await seed(); await Store.set(K.seeded,true);
+  adminUnlocked=true; applySession(); renderAll(); renderAdmin();
+}
+
+/* boot */
+init();
+</script>
+</body>
+</html>
