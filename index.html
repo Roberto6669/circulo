@@ -57,7 +57,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   }
   .nav-links button:hover{color:var(--cream);background:var(--surface2)}
   .nav-links button.active{color:var(--gold-lt);background:var(--surface2)}
-  .sess{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding-left:6px;border-left:1px solid var(--line);margin-left:4px}
+  .sess{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);padding:6px 6px 6px 12px;border-left:1px solid var(--line);margin-left:4px;cursor:pointer;transition:.15s}
+  .sess:hover{color:var(--gold-lt)}
   .sess .dot{width:7px;height:7px;border-radius:50%;background:var(--muted2)}
   .sess.in .dot{background:var(--ok)}
 
@@ -249,9 +250,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       <button data-v="ofertas" onclick="go('ofertas')">Ofertas</button>
       <button data-v="carnet" onclick="go('carnet')">Mi carnet</button>
       <button data-v="negocios" onclick="go('negocios')">Negocios</button>
-      <button data-v="admin" onclick="go('admin')">Admin</button>
     </div>
-    <div class="sess" id="sessBox"><span class="dot"></span><span id="sessTxt">Invitado</span></div>
+    <div class="sess" id="sessBox" onclick="goToMyArea()" title="Mi cuenta"><span class="dot"></span><span id="sessTxt">Invitado</span></div>
   </div>
 </nav>
 
@@ -411,6 +411,28 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             </div>
           </div>
         </div>
+
+        <div class="panel" style="padding:24px;margin-top:24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap">
+            <h3 style="font-family:Fraunces;font-size:20px">Mis datos</h3>
+            <button class="btn btn-ghost btn-sm" id="mdEditBtn" onclick="editMyData()">Editar mis datos</button>
+          </div>
+          <div class="alert ok" id="mdAlert"></div>
+          <div id="mdView" class="grid g2" style="gap:16px">
+            <div><small style="color:var(--muted);font-size:12px">Nombre</small><div id="mdName" style="margin-top:3px;font-weight:600">—</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Correo</small><div id="mdEmail" style="margin-top:3px;font-weight:600">—</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Teléfono</small><div id="mdPhone" style="margin-top:3px;font-weight:600">—</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Miembro desde</small><div id="mdSince" style="margin-top:3px;font-weight:600">—</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Membresía</small><div id="mdType" style="margin-top:3px;font-weight:600">De por vida</div></div>
+            <div><small style="color:var(--muted);font-size:12px">Número de miembro</small><div id="mdNum" style="margin-top:3px;font-weight:600;font-family:'JetBrains Mono';color:var(--gold-lt)">—</div></div>
+          </div>
+          <div id="mdEdit" style="display:none">
+            <div class="field"><label>Nombre completo</label><input id="mdInName"></div>
+            <div class="field"><label>Correo electrónico</label><input type="email" id="mdInEmail"></div>
+            <div class="field"><label>Teléfono</label><input id="mdInPhone"></div>
+            <div style="display:flex;gap:10px"><button class="btn btn-gold btn-sm" onclick="saveMyData()">Guardar cambios</button><button class="btn btn-ghost btn-sm" onclick="cancelMyData()">Cancelar</button></div>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -464,11 +486,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         </div>
         <div class="grid g2" style="align-items:start">
           <div class="panel" style="padding:24px">
-            <h3 style="font-family:Fraunces;font-size:20px;margin-bottom:14px">Publicar una oferta</h3>
+            <h3 id="offerFormTitle" style="font-family:Fraunces;font-size:20px;margin-bottom:14px">Publicar una oferta</h3>
             <div class="alert ok" id="offerOk"></div>
             <div class="field"><label>Título del descuento</label><input id="oTitle" placeholder="20% de descuento"></div>
             <div class="field"><label>Descripción / términos</label><textarea id="oTerms" rows="3" placeholder="En el total de la cuenta. No acumulable con otras promociones."></textarea></div>
-            <button class="btn btn-gold btn-block" onclick="publishOffer()">Publicar oferta</button>
+            <div style="display:flex;gap:10px"><button class="btn btn-gold btn-block" id="offerSubmitBtn" onclick="publishOffer()">Publicar oferta</button><button class="btn btn-ghost btn-sm" id="offerCancelBtn" style="display:none" onclick="cancelEditOffer()">Cancelar</button></div>
           </div>
           <div>
             <h3 style="font-family:Fraunces;font-size:20px;margin-bottom:14px">Mis ofertas activas</h3>
@@ -551,15 +573,24 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
           <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Negocios aliados</h3>
           <div style="overflow:auto"><table id="bizTable"><thead><tr><th>Negocio</th><th>Categoría</th><th>Contacto</th><th>Ofertas</th></tr></thead><tbody></tbody></table></div>
         </div>
+
+        <div class="panel" style="padding:24px;margin-top:18px">
+          <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Mensajes de contacto</h3>
+          <div style="overflow:auto"><table id="contactTable"><thead><tr><th>Nombre</th><th>Correo</th><th>Mensaje</th><th>Fecha</th></tr></thead><tbody></tbody></table></div>
+        </div>
       </div>
     </section>
   </div>
 </div>
 
 <footer>
+  <div class="foot-in" style="justify-content:center;margin-bottom:22px;padding-bottom:24px;border-bottom:1px solid var(--line)">
+    <button class="btn btn-ghost btn-sm" onclick="openContact()">Contact Us</button>
+    <button class="btn btn-ghost btn-sm" onclick="go('admin')">Admin</button>
+  </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.1</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.2</div>
   </div>
 </footer>
 
@@ -586,6 +617,26 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
 </div>
 
+<!-- ============ CONTACT MODAL ============ -->
+<div class="modal-bg" id="contactModal">
+  <div class="modal-wrap">
+    <div class="modal">
+      <button class="x" onclick="closeContact()">×</button>
+      <div class="eyebrow">Contacto</div>
+      <h2>Contáctanos</h2>
+      <p style="color:var(--muted);font-size:14px;margin:6px 0 20px">¿Tienes una pregunta o quieres unir tu negocio al club? Escríbenos y te respondemos.</p>
+      <div class="alert err" id="contactAlert"></div>
+      <div class="alert ok" id="contactOk"></div>
+      <div id="contactForm">
+        <div class="field"><label>Nombre</label><input id="ctName" placeholder="Tu nombre"></div>
+        <div class="field"><label>Correo electrónico</label><input type="email" id="ctEmail" placeholder="tucorreo@ejemplo.com"></div>
+        <div class="field"><label>Mensaje</label><textarea id="ctDesc" rows="4" placeholder="¿En qué podemos ayudarte?"></textarea></div>
+        <button class="btn btn-gold btn-block" onclick="submitContact()">Enviar mensaje</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    EL CÍRCULO — almacenamiento (window.storage en Claude, localStorage al desplegar)
@@ -605,14 +656,15 @@ const Store = {
     }catch(e){ console.error('storage', e); }
   }
 };
-const K = { members:'circulo:members', biz:'circulo:businesses', offers:'circulo:offers', coupons:'circulo:coupons', counters:'circulo:counters', session:'circulo:session', seeded:'circulo:seeded' };
+const K = { members:'circulo:members', biz:'circulo:businesses', offers:'circulo:offers', coupons:'circulo:coupons', counters:'circulo:counters', session:'circulo:session', contacts:'circulo:contacts', seeded:'circulo:seeded' };
 
-let DB = { members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, session:null };
+let DB = { members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, contacts:[], session:null };
 
 const ADMIN_PIN = '2026';            // ← cambia esto antes de publicar
 const MEMBER_FEE = 1.99, BUSINESS_FEE = 99;
 let adminUnlocked = false;
 let joinRole = 'member', joinMethod = 'coupon', bizMethod = 'coupon';
+let editingOfferId = null;
 
 /* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
@@ -624,7 +676,7 @@ function expDate(){ const d=new Date(); d.setFullYear(d.getFullYear()+1); return
 function showAlert(id,msg,type){ const e=$('#'+id); e.textContent=msg; e.className='alert '+type+' show'; setTimeout(()=>e.classList.remove('show'),4200); }
 function makeQR(el,text,size){ try{ el.innerHTML=''; new QRCode(el,{text,width:size,height:size,colorDark:'#14110E',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }catch(e){ console.error('QR error',e); el.innerHTML='<div style="font-size:8px;color:#9A9286;padding:6px;text-align:center">QR</div>'; } }
 
-async function save(){ await Store.set(K.members,DB.members); await Store.set(K.biz,DB.biz); await Store.set(K.offers,DB.offers); await Store.set(K.coupons,DB.coupons); await Store.set(K.counters,DB.counters); await Store.set(K.session,DB.session); }
+async function save(){ await Store.set(K.members,DB.members); await Store.set(K.biz,DB.biz); await Store.set(K.offers,DB.offers); await Store.set(K.coupons,DB.coupons); await Store.set(K.counters,DB.counters); await Store.set(K.contacts,DB.contacts); await Store.set(K.session,DB.session); }
 
 /* ============================================================ INIT */
 async function init(){
@@ -633,6 +685,7 @@ async function init(){
   DB.offers   = await Store.get(K.offers, []);
   DB.coupons  = await Store.get(K.coupons, {});
   DB.counters = await Store.get(K.counters, {member:0,business:0,offer:0});
+  DB.contacts = await Store.get(K.contacts, []);
   DB.session  = await Store.get(K.session, null);
   const seeded = await Store.get(K.seeded, false);
   if(!seeded){ await seed(); await Store.set(K.seeded, true); }
@@ -675,6 +728,27 @@ function applySession(){
   if(s && s.role==='member'){ const m=DB.members.find(x=>x.id===s.id); if(m){ box.classList.add('in'); txt.textContent=m.name.split(' ')[0]+' · Miembro'; return; } }
   if(s && s.role==='business'){ const b=DB.biz.find(x=>x.id===s.id); if(b){ box.classList.add('in'); txt.textContent=b.name+' · Negocio'; return; } }
   box.classList.remove('in'); txt.textContent='Invitado';
+}
+
+function goToMyArea(){
+  const s=DB.session;
+  if(s && s.role==='member') go('carnet');
+  else if(s && s.role==='business') go('negocios');
+  else openJoin('member');
+}
+
+/* ============================================================ CONTACTO */
+function openContact(){ $('#contactModal').classList.add('show'); }
+function closeContact(){ $('#contactModal').classList.remove('show'); }
+async function submitContact(){
+  const name=$('#ctName').value.trim(), email=$('#ctEmail').value.trim(), desc=$('#ctDesc').value.trim();
+  if(!name||!email||!desc){ showAlert('contactAlert','Completa todos los campos.','err'); return; }
+  DB.contacts.push({name, email, desc, at:Date.now()});
+  await save();
+  if(adminUnlocked) renderAdmin();
+  ['ctName','ctEmail','ctDesc'].forEach(i=>$('#'+i).value='');
+  showAlert('contactOk','¡Mensaje enviado! Te responderemos pronto.','ok');
+  setTimeout(closeContact, 1600);
 }
 
 /* ============================================================ RENDER */
@@ -759,6 +833,27 @@ function renderCarnet(){
   $('#mcName').textContent=m.name; $('#mcExp').textContent=m.exp;
   $('#mcGreet').textContent='Hola, '+m.name.split(' ')[0];
   makeQR($('#mcQR'),'CIRCULO|'+m.num+'|'+m.token,60);
+  // Mis datos
+  $('#mdName').textContent=m.name; $('#mdEmail').textContent=m.email; $('#mdPhone').textContent=m.phone||'—';
+  $('#mdSince').textContent=new Date(m.created).toLocaleDateString('es'); $('#mdNum').textContent=m.num;
+  $('#mdView').style.display='grid'; $('#mdEdit').style.display='none'; $('#mdEditBtn').style.display='inline-flex';
+}
+
+function editMyData(){
+  const m=DB.members.find(x=>x.id===DB.session.id); if(!m) return;
+  $('#mdInName').value=m.name; $('#mdInEmail').value=m.email; $('#mdInPhone').value=m.phone||'';
+  $('#mdView').style.display='none'; $('#mdEdit').style.display='block'; $('#mdEditBtn').style.display='none';
+}
+function cancelMyData(){ $('#mdView').style.display='grid'; $('#mdEdit').style.display='none'; $('#mdEditBtn').style.display='inline-flex'; }
+async function saveMyData(){
+  const m=DB.members.find(x=>x.id===DB.session.id); if(!m) return;
+  const name=$('#mdInName').value.trim(), email=$('#mdInEmail').value.trim().toLowerCase(), phone=$('#mdInPhone').value.trim();
+  if(!name||!email){ showAlert('mdAlert','Nombre y correo son obligatorios.','err'); return; }
+  if(DB.members.some(x=>x.id!==m.id && x.email===email)){ showAlert('mdAlert','Ese correo ya está en uso por otro miembro.','err'); return; }
+  m.name=name; m.email=email; m.phone=phone;
+  await save();
+  applySession(); renderCarnet(); if(adminUnlocked) renderAdmin();
+  showAlert('mdAlert','Datos actualizados.','ok');
 }
 
 /* ============================================================ BUSINESS */
@@ -792,19 +887,43 @@ function renderBiz(){
   if(!b) return;
   $('#bizDashName').textContent=b.name;
   const mine=DB.offers.filter(o=>o.bizId===b.id);
-  $('#myOffers').innerHTML = mine.length ? mine.map(o=>`<div class="panel" style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div><div class="cat" style="color:var(--gold-lt)">${esc(o.cat)}</div><div style="font-family:Fraunces;font-size:18px;color:var(--gold-lt);margin:2px 0 4px">${esc(o.title)}</div><div style="color:var(--muted);font-size:13px">${esc(o.terms)}</div></div><button class="copy-b" onclick="deleteOffer('${o.id}')">Eliminar</button></div></div>`).join('') : '<p class="empty">Aún no has publicado ofertas.</p>';
+  $('#myOffers').innerHTML = mine.length ? mine.map(o=>`<div class="panel" style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div><div class="cat" style="color:var(--gold-lt)">${esc(o.cat)}</div><div style="font-family:Fraunces;font-size:18px;color:var(--gold-lt);margin:2px 0 4px">${esc(o.title)}</div><div style="color:var(--muted);font-size:13px">${esc(o.terms)}</div></div><div style="display:flex;flex-direction:column;gap:6px;flex:none"><button class="copy-b" onclick="startEditOffer('${o.id}')">Editar</button><button class="copy-b" onclick="deleteOffer('${o.id}')">Eliminar</button></div></div></div>`).join('') : '<p class="empty">Aún no has publicado ofertas.</p>';
 }
 
 async function publishOffer(){
   const b=DB.biz.find(x=>x.id===DB.session.id);
   const title=$('#oTitle').value.trim(), terms=$('#oTerms').value.trim();
   if(!title){ showAlert('offerOk','Escribe el título del descuento.','err'); return; }
-  DB.counters.offer++;
-  DB.offers.push({id:'O'+DB.counters.offer,bizId:b.id,biz:b.name,cat:b.cat,title,terms:terms||'Consulta términos en el local.',created:Date.now()});
-  await save();
-  $('#oTitle').value=''; $('#oTerms').value='';
-  showAlert('offerOk','Oferta publicada. Ya es visible para los miembros.','ok');
+  if(editingOfferId){
+    const o=DB.offers.find(x=>x.id===editingOfferId);
+    if(o){ o.title=title; o.terms=terms||'Consulta términos en el local.'; }
+    cancelEditOffer();
+    await save();
+    showAlert('offerOk','Oferta actualizada.','ok');
+  } else {
+    DB.counters.offer++;
+    DB.offers.push({id:'O'+DB.counters.offer,bizId:b.id,biz:b.name,cat:b.cat,title,terms:terms||'Consulta términos en el local.',created:Date.now()});
+    await save();
+    $('#oTitle').value=''; $('#oTerms').value='';
+    showAlert('offerOk','Oferta publicada. Ya es visible para los miembros.','ok');
+  }
   renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+}
+function startEditOffer(id){
+  const o=DB.offers.find(x=>x.id===id); if(!o) return;
+  editingOfferId=id;
+  $('#oTitle').value=o.title; $('#oTerms').value=o.terms;
+  $('#offerFormTitle').textContent='Editar oferta';
+  $('#offerSubmitBtn').textContent='Guardar cambios';
+  $('#offerCancelBtn').style.display='inline-flex';
+  $('#oTitle').focus();
+}
+function cancelEditOffer(){
+  editingOfferId=null;
+  $('#oTitle').value=''; $('#oTerms').value='';
+  $('#offerFormTitle').textContent='Publicar una oferta';
+  $('#offerSubmitBtn').textContent='Publicar oferta';
+  $('#offerCancelBtn').style.display='none';
 }
 async function deleteOffer(id){ DB.offers=DB.offers.filter(o=>o.id!==id); await save(); renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin(); }
 function logoutBusiness(){ DB.session=null; Store.set(K.session,null); applySession(); renderBiz(); }
@@ -872,6 +991,9 @@ function renderAdmin(){
 
   const bt=$('#bizTable tbody');
   bt.innerHTML = DB.biz.length ? DB.biz.map(b=>{ const n=DB.offers.filter(o=>o.bizId===b.id).length; return `<tr><td>${esc(b.name)}</td><td>${esc(b.cat)}</td><td>${esc(b.email)}</td><td>${n}</td></tr>`; }).join('') : '<tr><td colspan="4" class="empty">Sin negocios aún.</td></tr>';
+
+  const cont=$('#contactTable tbody');
+  cont.innerHTML = (DB.contacts&&DB.contacts.length) ? DB.contacts.slice().reverse().map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td style="max-width:340px">${esc(c.desc)}</td><td>${new Date(c.at).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">Sin mensajes aún.</td></tr>';
 }
 
 async function generateCoupons(){
@@ -888,7 +1010,7 @@ function toggleUses(code){ const r=document.getElementById('uses-'+code); if(r) 
 
 async function resetAll(){
   if(!confirm('¿Borrar todos los datos de la demo y volver a empezar?')) return;
-  DB={ members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, session:null };
+  DB={ members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, contacts:[], session:null };
   await Store.set(K.seeded,false); await save();
   await seed(); await Store.set(K.seeded,true);
   adminUnlocked=true; applySession(); renderAll(); renderAdmin();
