@@ -290,7 +290,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       <button data-v="carnet" onclick="go('carnet')">Mi carnet</button>
       <button data-v="negocios" onclick="go('negocios')">Negocios</button>
     </div>
-    <div class="sess" id="sessBox" onclick="goToMyArea()" title="Mi cuenta"><span class="dot"></span><span id="sessTxt">Invitado</span></div>
+    <div class="sess" id="sessBox"><span class="dot"></span><span id="sessTxt" onclick="goToMyArea()" style="cursor:pointer" title="Mi cuenta">Invitado</span><button id="logoutBtn" onclick="logout()" style="display:none;margin-left:9px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--err);border:1px solid var(--err);border-radius:5px;padding:3px 9px">Salir</button></div>
   </div>
 </nav>
 
@@ -444,7 +444,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
               <button class="btn btn-gold btn-sm" onclick="go('ofertas')">Ver ofertas</button>
-              <button class="btn btn-ghost btn-sm" onclick="logoutMember()">Cerrar carnet</button>
+              <button class="btn btn-ghost btn-sm" onclick="logoutMember()">Cerrar sesión</button>
             </div>
           </div>
         </div>
@@ -638,7 +638,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.5</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.6</div>
   </div>
 </footer>
 
@@ -757,6 +757,8 @@ async function seed(){
     DB.biz.push({id:bid,name:s.name,cat:s.cat,email:s.email,phone:s.phone,password:'demo123',created:Date.now()});
     DB.counters.offer++; DB.offers.push({id:'O'+DB.counters.offer,bizId:bid,biz:s.name,cat:s.cat,title:s.title,terms:s.terms,created:Date.now()});
   });
+  DB.counters.member++;
+  DB.members.push({ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name:'Cliente Demo', email:'cliente@demo.com', phone:'(305) 555-0001', password:'demo123', tier:'FUNDADOR', method:'demo', couponCode:null, exp:'De por vida', token:genToken(), created:Date.now() });
   DB.coupons['EC-DEMO-2026'] = {type:'member',active:true,note:'Cupón de prueba',created:Date.now(),uses:[]};
   await save();
 }
@@ -774,10 +776,10 @@ function go(v){
 
 /* ============================================================ SESSION */
 function applySession(){
-  const s=DB.session, box=$('#sessBox'), txt=$('#sessTxt');
-  if(s && s.role==='member'){ const m=DB.members.find(x=>x.id===s.id); if(m){ box.classList.add('in'); txt.textContent=m.name.split(' ')[0]+' · Miembro'; return; } }
-  if(s && s.role==='business'){ const b=DB.biz.find(x=>x.id===s.id); if(b){ box.classList.add('in'); txt.textContent=b.name+' · Negocio'; return; } }
-  box.classList.remove('in'); txt.textContent='Invitado';
+  const s=DB.session, box=$('#sessBox'), txt=$('#sessTxt'), lo=$('#logoutBtn');
+  if(s && s.role==='member'){ const m=DB.members.find(x=>x.id===s.id); if(m){ box.classList.add('in'); txt.textContent=m.name.split(' ')[0]+' · Miembro'; lo.style.display='inline-flex'; return; } }
+  if(s && s.role==='business'){ const b=DB.biz.find(x=>x.id===s.id); if(b){ box.classList.add('in'); txt.textContent=b.name+' · Negocio'; lo.style.display='inline-flex'; return; } }
+  box.classList.remove('in'); txt.textContent='Invitado'; lo.style.display='none';
 }
 
 function goToMyArea(){
@@ -876,6 +878,7 @@ function loginMember(){
   applySession(); renderOffers(); renderCarnet();
 }
 function logoutMember(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); }
+function logout(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); renderBiz(); go('inicio'); }
 
 function renderCarnet(){
   const isM = DB.session && DB.session.role==='member';
