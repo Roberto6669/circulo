@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Círculo · Club Exclusivo</title>
+<title>CÍRCULO · CLUB EXCLUSIVO</title>
 <link rel="icon" type="image/png" href="">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,6 +45,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:26px}
   .brand{display:flex;align-items:center;gap:11px;font-family:'Inter',sans-serif;font-weight:700;font-size:18px;letter-spacing:.2em;text-transform:uppercase}
   .brand .key{width:30px;height:30px;flex:none;object-fit:contain}
+  .brand-text{display:flex;flex-direction:column;line-height:1}
+  .brand-text small{font-size:8px;letter-spacing:.24em;color:var(--muted);font-weight:600;margin-top:3px}
   .card-brandwrap{display:flex;align-items:center;gap:9px}
   .card-logo{width:30px;height:30px;flex:none;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
   .foot-logo{width:24px;height:24px;flex:none;object-fit:contain}
@@ -240,7 +242,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   <div class="nav-in">
     <div class="brand" onclick="go('inicio')" style="cursor:pointer">
       <img class="key" src="" alt="Círculo">
-      <b>CÍRCULO</b>
+      <div class="brand-text"><b>CÍRCULO</b><small>CLUB EXCLUSIVO</small></div>
     </div>
     <div class="nav-links" id="navlinks">
       <button data-v="inicio" class="active" onclick="go('inicio')">Inicio</button>
@@ -283,9 +285,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
           <div class="card-bottom">
             <div>
               <div class="lbl">MIEMBRO</div>
-              <div class="val">Roberto Escobar</div>
-              <div class="lbl" style="margin-top:7px">VÁLIDA HASTA</div>
-              <div class="val">06 / 27</div>
+              <div class="val">ROBERTO ESCOBAR</div>
+              <div class="lbl" style="margin-top:7px">MEMBRESÍA</div>
+              <div class="val">De por vida</div>
             </div>
             <div class="card-qr" id="heroQR"></div>
           </div>
@@ -306,7 +308,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         <div class="panel" style="padding:24px">
           <div class="badge gold">Paso 1</div>
           <h3 style="font-family:Fraunces;font-size:20px;margin:12px 0 6px">Activa tu membresía</h3>
-          <p style="color:var(--muted);font-size:14.5px">Regístrate con un cupón de regalo o una cuota anual. Recibes tu carnet digital al instante.</p>
+          <p style="color:var(--muted);font-size:14.5px">Regístrate con un cupón de regalo o un pago único de $1.99. Recibes tu carnet digital de por vida al instante.</p>
         </div>
         <div class="panel" style="padding:24px">
           <div class="badge gold">Paso 2</div>
@@ -388,7 +390,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
                 <div>
                   <div class="lbl">MIEMBRO</div>
                   <div class="val" id="mcName">—</div>
-                  <div class="lbl" style="margin-top:7px">VÁLIDA HASTA</div>
+                  <div class="lbl" style="margin-top:7px">MEMBRESÍA</div>
                   <div class="val" id="mcExp">—</div>
                 </div>
                 <div class="card-qr" id="mcQR"></div>
@@ -556,8 +558,8 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
 <footer>
   <div class="foot-in">
-    <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>Círculo · Club Exclusivo — Miami, FL</span></div>
-    <div>Hecho por Roberto Escobar Citty · v1.0</div>
+    <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.1</div>
   </div>
 </footer>
 
@@ -568,7 +570,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       <button class="x" onclick="closeJoin()">×</button>
       <div class="eyebrow" id="joinEyebrow">Membresía</div>
       <h2 id="joinTitle">Hazte miembro</h2>
-      <p style="color:var(--muted);font-size:14px;margin:6px 0 20px" id="joinSub">Activa tu carnet con un cupón o la cuota anual.</p>
+      <p style="color:var(--muted);font-size:14px;margin:6px 0 20px" id="joinSub">Activa tu carnet con un cupón o un pago único de $1.99.</p>
       <div class="alert err" id="joinAlert"></div>
       <div id="joinForm">
         <div class="field"><label>Nombre completo</label><input id="jName" placeholder="Roberto Escobar"></div>
@@ -577,7 +579,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         <div class="divider">forma de activación</div>
         <div class="seg" style="margin-bottom:14px"><button class="on" id="jSegCoupon" onclick="joinPay('coupon')">Tengo cupón</button><button id="jSegPay" onclick="joinPay('pay')">Pagar cuota</button></div>
         <div class="field" id="jCouponField"><label>Código de cupón</label><input id="jCoupon" placeholder="EC-XXXX-XXXX" style="font-family:'JetBrains Mono';letter-spacing:1px"></div>
-        <div id="jPayField" style="display:none"><div class="note" style="margin:0 0 12px">Cuota: <b style="color:var(--gold-lt)">$30/año</b>. Pago simulado para esta demo — en producción se conecta a Stripe.</div></div>
+        <div id="jPayField" style="display:none"><div class="note" style="margin:0 0 12px">Membresía <b style="color:var(--gold-lt)">de por vida por $1.99</b> (pago único). Pago simulado para esta demo — en producción se conecta a Stripe.</div></div>
         <button class="btn btn-gold btn-block" onclick="registerMember()">Activar membresía</button>
       </div>
     </div>
@@ -608,7 +610,7 @@ const K = { members:'circulo:members', biz:'circulo:businesses', offers:'circulo
 let DB = { members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, session:null };
 
 const ADMIN_PIN = '2026';            // ← cambia esto antes de publicar
-const MEMBER_FEE = 30, BUSINESS_FEE = 99;
+const MEMBER_FEE = 1.99, BUSINESS_FEE = 99;
 let adminUnlocked = false;
 let joinRole = 'member', joinMethod = 'coupon', bizMethod = 'coupon';
 
@@ -709,7 +711,7 @@ function openJoin(role){
   joinRole=role; joinMethod='coupon';
   $('#joinEyebrow').textContent = role==='business' ? 'Negocio aliado' : 'Membresía';
   $('#joinTitle').textContent = role==='business' ? 'Registra tu negocio' : 'Hazte miembro';
-  $('#joinSub').textContent = role==='business' ? 'Publica ofertas para los miembros del club.' : 'Activa tu carnet con un cupón o la cuota anual.';
+  $('#joinSub').textContent = role==='business' ? 'Publica ofertas para los miembros del club.' : 'Activa tu carnet con un cupón o un pago único de $1.99.';
   if(role==='business'){ closeJoin(); go('negocios'); return; }
   $('#joinModal').classList.add('show');
 }
@@ -730,7 +732,7 @@ async function registerMember(){
     c.uses=c.uses||[]; c.uses.push({name, email, role:'member', at:Date.now()}); method='cupón'; couponCode=code;
   }
   DB.counters.member++;
-  const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, tier:'MIEMBRO', method, couponCode, exp:expDate(), token:genToken(), created:Date.now() };
+  const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, tier:'MIEMBRO', method, couponCode, exp:'De por vida', token:genToken(), created:Date.now() };
   DB.members.push(m); DB.session={role:'member',id:m.id};
   await save();
   closeJoin(); applySession(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
@@ -840,7 +842,7 @@ function validateMember(){
       <div class="vrow"><span>Miembro</span><span>${esc(m.name)}</span></div>
       <div class="vrow"><span>Número</span><span style="font-family:'JetBrains Mono'">${esc(m.num)}</span></div>
       <div class="vrow"><span>Estatus</span><span>Activa</span></div>
-      <div class="vrow"><span>Válida hasta</span><span>${esc(m.exp)}</span></div>
+      <div class="vrow"><span>Vigencia</span><span>${esc(m.exp)}</span></div>
     </div>
     <button class="btn btn-gold btn-sm btn-block" style="margin-top:16px" onclick="confirmRedeem(this)">Registrar canje y aplicar descuento</button></div>`;
 }
