@@ -18,7 +18,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     --gold:#C9A227; --gold-lt:#937015; --gold-dk:#B8901F;
     --cream:#221D17; --muted:#6B6357; --muted2:#9A9286;
     --ok:#2E9E54; --ok-bg:#E9F5EC; --err:#C0432C; --err-bg:#FBEAE5;
-    --radius:14px; --maxw:1120px;
+    --radius:6px; --maxw:1120px;
     --shadow:0 20px 50px -22px rgba(40,34,24,.22);
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -53,7 +53,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   .brand b{color:var(--gold-lt)}
   .nav-links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
   .nav-links button{
-    padding:8px 14px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);transition:.18s;
+    padding:8px 14px;border-radius:5px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border:1px solid var(--gold-dk);transition:.18s;
   }
   .nav-links button:hover{color:var(--cream);background:var(--surface2)}
   .nav-links button.active{color:var(--gold-lt);background:var(--surface2)}
@@ -69,13 +69,14 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
   .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-lt);font-weight:600}
-  h1{font-family:'Fraunces',serif;font-weight:600;line-height:1.04;letter-spacing:-.5px}
-  h2{font-family:'Fraunces',serif;font-weight:600;font-size:30px;letter-spacing:-.4px;margin-bottom:6px}
+  h1{font-family:'Fraunces',serif;font-weight:600;line-height:1.04;letter-spacing:-.5px;text-transform:uppercase}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:30px;letter-spacing:-.2px;margin-bottom:6px;text-transform:uppercase}
+  h3{text-transform:uppercase}
   .lead{color:var(--muted);font-size:17px;max-width:46ch}
 
   /* ---------- Hero ---------- */
   .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center;padding:72px 0 56px}
-  .hero h1{font-size:clamp(40px,6vw,62px)}
+  .hero h1{font-family:'Inter',sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:.005em;line-height:1.06;font-size:clamp(34px,5vw,54px)}
   .hero h1 em{font-style:normal;color:var(--gold-lt)}
   .hero .lead{margin:22px 0 30px;font-size:18px}
   .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
@@ -86,20 +87,20 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   /* ---------- Buttons ---------- */
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    padding:13px 22px;border-radius:11px;font-weight:600;font-size:15px;transition:.18s;white-space:nowrap;
+    padding:13px 22px;border-radius:6px;font-weight:600;font-size:14px;letter-spacing:.05em;text-transform:uppercase;transition:.18s;white-space:nowrap;
   }
   .btn-gold{background:linear-gradient(135deg,#E8C85A,#C9A227);color:#1a160f;box-shadow:0 8px 22px -8px rgba(201,162,39,.45)}
   .btn-gold:hover{transform:translateY(-2px);box-shadow:0 12px 28px -8px rgba(201,162,39,.5)}
   .btn-ghost{background:var(--surface);border:1px solid var(--line2);color:var(--cream)}
   .btn-ghost:hover{border-color:var(--gold);color:var(--gold-lt)}
-  .btn-sm{padding:9px 15px;font-size:13.5px;border-radius:9px}
+  .btn-sm{padding:9px 15px;font-size:12.5px;border-radius:5px}
   .btn-block{width:100%}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
   /* ---------- The Card (signature) ---------- */
   .card-stage{display:flex;justify-content:center;perspective:1400px}
   .card{
-    position:relative;width:370px;max-width:100%;aspect-ratio:1.586;border-radius:20px;
+    position:relative;width:370px;max-width:100%;aspect-ratio:1.586;border-radius:12px;
     padding:24px 26px;color:#241c10;overflow:hidden;
     background:
       linear-gradient(135deg,#6b5418 0%,#9c7a26 16%,#d8b341 34%,#f4e6ad 50%,#cba12a 66%,#8a6d23 84%,#5e4a18 100%);
@@ -146,7 +147,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   .g2{grid-template-columns:repeat(2,1fr)}
 
   /* Offer card */
-  .offer{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;transition:.2s;overflow:hidden;box-shadow:0 1px 2px rgba(40,34,24,.04),0 10px 28px -20px rgba(40,34,24,.16)}
+  .offer{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);transition:.2s;overflow:hidden;box-shadow:0 1px 2px rgba(40,34,24,.04),0 10px 28px -20px rgba(40,34,24,.16)}
+  .offer-img{aspect-ratio:16/10;background-size:cover;background-position:center;background-color:var(--surface2);position:relative}
+  .offer-img.placeholder{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2a2418,#574418 58%,#8a6d23)}
+  .offer-mono{font-family:'Fraunces',serif;font-size:48px;font-weight:600;color:rgba(232,200,90,.5)}
+  .offer-body{padding:20px}
   .offer:hover{border-color:var(--line2);transform:translateY(-3px)}
   .offer .cat{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-lt);font-weight:600}
   .offer .biz{font-family:'Fraunces',serif;font-size:19px;font-weight:600;margin:5px 0 12px}
@@ -168,18 +173,18 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   .field{margin-bottom:14px}
   .field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
   .field input,.field select,.field textarea{
-    width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;color:var(--cream);transition:.15s}
+    width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;color:var(--cream);transition:.15s}
   .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.14)}
   .field input::placeholder,.field textarea::placeholder{color:var(--muted2)}
-  .seg{display:flex;gap:8px;background:var(--bg2);padding:5px;border-radius:11px;border:1px solid var(--line2)}
-  .seg button{flex:1;padding:10px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--muted);transition:.15s}
+  .seg{display:flex;gap:8px;background:var(--bg2);padding:5px;border-radius:6px;border:1px solid var(--line2)}
+  .seg button{flex:1;padding:10px;border-radius:5px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);transition:.15s}
   .seg button.on{background:var(--surface2);color:var(--gold-lt);box-shadow:0 1px 0 rgba(255,255,255,.05)}
 
   .note{font-size:12.5px;color:var(--muted2);margin-top:10px;line-height:1.5}
   .divider{display:flex;align-items:center;gap:14px;color:var(--muted2);font-size:12px;margin:18px 0;text-transform:uppercase;letter-spacing:.12em}
   .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
-  .alert{padding:12px 15px;border-radius:10px;font-size:14px;margin-bottom:14px;display:none;animation:fade .25s}
+  .alert{padding:12px 15px;border-radius:6px;font-size:14px;margin-bottom:14px;display:none;animation:fade .25s}
   .alert.show{display:block}
   .alert.ok{background:var(--ok-bg);color:#1d7a3e;border:1px solid #BBE3C8}
   .alert.err{background:var(--err-bg);color:#a3331e;border:1px solid #F2C7BC}
@@ -202,9 +207,9 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   .stat b{font-family:'Fraunces',serif;font-size:34px;color:var(--gold-lt);font-weight:600;display:block;line-height:1}
   .stat small{color:var(--muted);font-size:12.5px;letter-spacing:.04em}
   .code-list{display:grid;gap:8px;margin-top:16px}
-  .code-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:11px 14px}
+  .code-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;padding:11px 14px}
   .code-row code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold-lt);letter-spacing:.5px}
-  .copy-b{font-size:12px;color:var(--muted);padding:5px 10px;border-radius:7px;border:1px solid var(--line2)}
+  .copy-b{font-size:11px;color:var(--muted);padding:5px 10px;border-radius:5px;border:1px solid var(--line2);text-transform:uppercase;letter-spacing:.03em}
   .copy-b:hover{color:var(--gold-lt);border-color:var(--gold)}
   table{width:100%;border-collapse:collapse;font-size:13.5px}
   th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line)}
@@ -217,7 +222,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   /* Modal */
   .modal-bg{position:fixed;inset:0;background:rgba(34,29,23,.42);backdrop-filter:blur(4px);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
   .modal-bg.show{display:flex;animation:fade .2s}
-  .modal{background:var(--bg2);border:1px solid var(--line2);border-radius:18px;max-width:440px;width:100%;padding:30px;box-shadow:var(--shadow);max-height:92vh;overflow:auto}
+  .modal{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;max-width:440px;width:100%;padding:30px;box-shadow:var(--shadow);max-height:92vh;overflow:auto}
   .modal h2{font-size:25px}
   .modal .x{position:absolute;top:16px;right:18px;font-size:22px;color:var(--muted);width:34px;height:34px;border-radius:8px}
   .modal .x:hover{background:var(--surface2);color:var(--cream)}
@@ -257,8 +262,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     .brand{font-size:16px;letter-spacing:.14em}
     .brand .key{width:26px;height:26px}
     .nav-links button{padding:7px 9px;font-size:12.5px}
-    .panel,.offer{border-radius:12px}
-    .modal{padding:24px 20px;border-radius:16px}
+    .modal{padding:24px 20px;border-radius:8px}
     .modal h2{font-size:22px}
     .modal .x{top:12px;right:14px}
     .sec-head{flex-direction:column;align-items:flex-start;gap:12px}
@@ -523,6 +527,11 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             <div class="alert ok" id="offerOk"></div>
             <div class="field"><label>Título del descuento</label><input id="oTitle" placeholder="20% de descuento"></div>
             <div class="field"><label>Descripción / términos</label><textarea id="oTerms" rows="3" placeholder="En el total de la cuenta. No acumulable con otras promociones."></textarea></div>
+            <div class="field">
+              <label>Imagen de la oferta <span style="color:var(--muted2);font-weight:400">— recomendado 800 × 500 px (horizontal)</span></label>
+              <input type="file" id="oImage" accept="image/*" onchange="handleOfferImage(event)" style="font-size:13px">
+              <div id="oImgPreview" style="display:none;margin-top:10px"><img id="oImgPreviewImg" style="width:100%;max-height:170px;object-fit:cover;border-radius:6px;border:1px solid var(--line)"></div>
+            </div>
             <div style="display:flex;gap:10px"><button class="btn btn-gold btn-block" id="offerSubmitBtn" onclick="publishOffer()">Publicar oferta</button><button class="btn btn-ghost btn-sm" id="offerCancelBtn" style="display:none" onclick="cancelEditOffer()">Cancelar</button></div>
           </div>
           <div>
@@ -623,7 +632,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.3</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.4</div>
   </div>
 </footer>
 
@@ -698,6 +707,7 @@ const MEMBER_FEE = 1.99, BUSINESS_FEE = 99;
 let adminUnlocked = false;
 let joinRole = 'member', joinMethod = 'coupon', bizMethod = 'coupon';
 let editingOfferId = null;
+let offerImageData = null;
 
 /* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
@@ -794,13 +804,15 @@ function renderStatsHero(){
 }
 
 function offerCardHTML(o, unlocked){
+  const mono = esc(((o.biz||'?').trim().charAt(0)||'?').toUpperCase());
+  const img = o.image ? `<div class="offer-img" style="background-image:url('${o.image}')"></div>` : `<div class="offer-img placeholder"><span class="offer-mono">${mono}</span></div>`;
   if(unlocked){
-    return `<div class="offer"><div class="cat">${esc(o.cat)}</div><div class="biz">${esc(o.biz)}</div>
+    return `<div class="offer">${img}<div class="offer-body"><div class="cat">${esc(o.cat)}</div><div class="biz">${esc(o.biz)}</div>
       <div class="deal">${esc(o.title)}</div><div class="terms">${esc(o.terms)}</div>
-      <div class="foot"><span class="badge ok">● Disponible</span><span class="badge muted">Muestra tu carnet</span></div></div>`;
+      <div class="foot"><span class="badge ok">● Disponible</span><span class="badge muted">Muestra tu carnet</span></div></div></div>`;
   }
-  return `<div class="offer locked"><div class="cat">${esc(o.cat)}</div><div class="biz">${esc(o.biz)}</div>
-    <div class="deal">${esc(o.title)}</div><div class="terms">${esc(o.terms)}</div>
+  return `<div class="offer locked">${img}<div class="offer-body"><div class="cat">${esc(o.cat)}</div><div class="biz">${esc(o.biz)}</div>
+    <div class="deal">${esc(o.title)}</div><div class="terms">${esc(o.terms)}</div></div>
     <div class="lock-ov"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
       <p>Solo para miembros</p><button class="btn btn-gold btn-sm" onclick="openJoin('member')">Hazte miembro</button></div></div>`;
 }
@@ -929,23 +941,30 @@ async function publishOffer(){
   if(!title){ showAlert('offerOk','Escribe el título del descuento.','err'); return; }
   if(editingOfferId){
     const o=DB.offers.find(x=>x.id===editingOfferId);
-    if(o){ o.title=title; o.terms=terms||'Consulta términos en el local.'; }
+    if(o){ o.title=title; o.terms=terms||'Consulta términos en el local.'; o.image=offerImageData||o.image; }
     cancelEditOffer();
     await save();
     showAlert('offerOk','Oferta actualizada.','ok');
   } else {
     DB.counters.offer++;
-    DB.offers.push({id:'O'+DB.counters.offer,bizId:b.id,biz:b.name,cat:b.cat,title,terms:terms||'Consulta términos en el local.',created:Date.now()});
+    DB.offers.push({id:'O'+DB.counters.offer,bizId:b.id,biz:b.name,cat:b.cat,title,terms:terms||'Consulta términos en el local.',image:offerImageData,created:Date.now()});
     await save();
-    $('#oTitle').value=''; $('#oTerms').value='';
+    resetOfferForm();
     showAlert('offerOk','Oferta publicada. Ya es visible para los miembros.','ok');
   }
   renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+}
+function resetOfferForm(){
+  $('#oTitle').value=''; $('#oTerms').value=''; offerImageData=null;
+  $('#oImage').value=''; $('#oImgPreview').style.display='none';
 }
 function startEditOffer(id){
   const o=DB.offers.find(x=>x.id===id); if(!o) return;
   editingOfferId=id;
   $('#oTitle').value=o.title; $('#oTerms').value=o.terms;
+  offerImageData = o.image||null;
+  if(o.image){ $('#oImgPreviewImg').src=o.image; $('#oImgPreview').style.display='block'; } else { $('#oImgPreview').style.display='none'; }
+  $('#oImage').value='';
   $('#offerFormTitle').textContent='Editar oferta';
   $('#offerSubmitBtn').textContent='Guardar cambios';
   $('#offerCancelBtn').style.display='inline-flex';
@@ -953,10 +972,30 @@ function startEditOffer(id){
 }
 function cancelEditOffer(){
   editingOfferId=null;
-  $('#oTitle').value=''; $('#oTerms').value='';
+  resetOfferForm();
   $('#offerFormTitle').textContent='Publicar una oferta';
   $('#offerSubmitBtn').textContent='Publicar oferta';
   $('#offerCancelBtn').style.display='none';
+}
+function handleOfferImage(e){
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  resizeImage(f,800,500,function(data){ offerImageData=data; $('#oImgPreviewImg').src=data; $('#oImgPreview').style.display='block'; });
+}
+function resizeImage(file,w,h,cb){
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const img=new Image();
+    img.onload=function(){
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      const ctx=c.getContext('2d');
+      const ar=img.width/img.height, tar=w/h; let sw,sh,sx,sy;
+      if(ar>tar){ sh=img.height; sw=sh*tar; sx=(img.width-sw)/2; sy=0; } else { sw=img.width; sh=sw/tar; sx=0; sy=(img.height-sh)/2; }
+      ctx.drawImage(img,sx,sy,sw,sh,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',0.82));
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 async function deleteOffer(id){ DB.offers=DB.offers.filter(o=>o.id!==id); await save(); renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin(); }
 function logoutBusiness(){ DB.session=null; Store.set(K.session,null); applySession(); renderBiz(); }
