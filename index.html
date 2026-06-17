@@ -258,10 +258,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     .hero-cta .btn{width:100%}
     .hero-meta{gap:16px;margin-top:26px;padding-top:20px}
     .hero-meta div span{font-size:21px}
-    .nav-in{padding:10px 14px;gap:10px}
+    .nav-in{padding:10px 14px;gap:10px;align-items:flex-start;flex-wrap:wrap}
     .brand{font-size:16px;letter-spacing:.14em}
     .brand .key{width:26px;height:26px}
-    .nav-links button{padding:7px 9px;font-size:12.5px}
+    .sess{order:1;margin-left:0;border-left:none;padding-left:0}
+    .nav-links{order:2;flex-direction:column;align-items:stretch;width:auto;margin-left:auto;justify-content:flex-start;gap:6px}
+    .nav-links button{padding:8px 14px;font-size:12.5px;min-width:152px;text-align:center}
     .modal{padding:24px 20px;border-radius:8px}
     .modal h2{font-size:22px}
     .modal .x{top:12px;right:14px}
@@ -398,15 +400,13 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     <section class="block" style="border-top:none;padding-top:48px">
       <div id="carnetEmpty">
         <div class="eyebrow">Mi carnet</div>
-        <h2>Accede a tu membresía</h2>
-        <p class="lead" style="margin-bottom:22px">Ingresa el correo con el que te registraste para ver tu carnet digital, o hazte miembro si aún no tienes uno.</p>
+        <h2>Entra a tu cuenta</h2>
+        <p class="lead" style="margin-bottom:22px">Ingresa tu correo y contraseña para ver tu carnet digital, o hazte miembro si aún no tienes cuenta.</p>
         <div class="panel" style="padding:24px;max-width:420px">
           <div class="alert err" id="lookupAlert"></div>
-          <div class="field">
-            <label>Correo electrónico</label>
-            <input type="email" id="lookupEmail" placeholder="tucorreo@ejemplo.com">
-          </div>
-          <button class="btn btn-gold btn-block" onclick="lookupMember()">Ver mi carnet</button>
+          <div class="field"><label>Correo (usuario)</label><input type="email" id="lookupEmail" placeholder="tucorreo@ejemplo.com"></div>
+          <div class="field"><label>Contraseña</label><input type="password" id="lookupPass" placeholder="••••••" onkeydown="if(event.key==='Enter')loginMember()"></div>
+          <button class="btn btn-gold btn-block" onclick="loginMember()">Entrar</button>
           <div class="divider">o</div>
           <button class="btn btn-ghost btn-block" onclick="openJoin('member')">Hazte miembro</button>
         </div>
@@ -493,16 +493,22 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             </div>
           </div>
           <div class="panel" style="padding:26px">
-            <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:4px">Registra tu negocio</h3>
-            <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Cuota: <b style="color:var(--gold-lt)">$99/año</b> · o usa un cupón de aliado.</p>
+            <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Entrar a tu negocio</h3>
+            <div class="alert err" id="bizLoginAlert"></div>
+            <div class="field"><label>Correo (usuario)</label><input type="email" id="bizLoginEmail" placeholder="contacto@negocio.com"></div>
+            <div class="field"><label>Contraseña</label><input type="password" id="bizLoginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')loginBusiness()"></div>
+            <button class="btn btn-gold btn-block" onclick="loginBusiness()">Entrar al panel</button>
+            <div class="divider">o registra tu negocio</div>
+            <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Cuota: <b style="color:var(--gold-lt)">$99/año</b> · o usa un cupón de aliado.</p>
             <div class="alert err" id="bizAlert"></div>
             <div class="alert ok" id="bizOk"></div>
             <div class="field"><label>Nombre del negocio</label><input id="bName" placeholder="Café Habana 1958"></div>
             <div class="field"><label>Categoría</label>
               <select id="bCat"><option>Restaurante</option><option>Servicios</option><option>Belleza</option><option>Automotriz</option><option>Salud</option><option>Compras</option><option>Entretenimiento</option></select>
             </div>
-            <div class="field"><label>Correo de contacto</label><input type="email" id="bEmail" placeholder="contacto@negocio.com"></div>
+            <div class="field"><label>Correo de contacto (usuario)</label><input type="email" id="bEmail" placeholder="contacto@negocio.com"></div>
             <div class="field"><label>Teléfono</label><input id="bPhone" placeholder="(305) 555-0100"></div>
+            <div class="field"><label>Crea una contraseña</label><input type="password" id="bPass" placeholder="Mínimo 4 caracteres"></div>
             <div class="divider">forma de activación</div>
             <div class="seg" style="margin-bottom:14px"><button class="on" id="bSegCoupon" onclick="bizPay('coupon')">Tengo cupón</button><button id="bSegPay" onclick="bizPay('pay')">Pagar cuota</button></div>
             <div class="field" id="bCouponField"><label>Código de cupón</label><input id="bCoupon" placeholder="EC-XXXX-XXXX" style="font-family:'JetBrains Mono';letter-spacing:1px"></div>
@@ -608,12 +614,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
         <div class="panel" style="padding:24px;margin-bottom:18px">
           <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Miembros</h3>
-          <div style="overflow:auto"><table id="memberTable"><thead><tr><th>Número</th><th>Nombre</th><th>Correo</th><th>Tier</th><th>Alta</th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto"><table id="memberTable"><thead><tr><th>Número</th><th>Nombre</th><th>Usuario (correo)</th><th>Contraseña</th><th>Alta</th></tr></thead><tbody></tbody></table></div>
         </div>
 
         <div class="panel" style="padding:24px">
           <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Negocios aliados</h3>
-          <div style="overflow:auto"><table id="bizTable"><thead><tr><th>Negocio</th><th>Categoría</th><th>Contacto</th><th>Ofertas</th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto"><table id="bizTable"><thead><tr><th>Negocio</th><th>Categoría</th><th>Usuario (correo)</th><th>Contraseña</th><th>Ofertas</th></tr></thead><tbody></tbody></table></div>
         </div>
 
         <div class="panel" style="padding:24px;margin-top:18px">
@@ -632,7 +638,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.4</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.5</div>
   </div>
 </footer>
 
@@ -649,6 +655,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
         <div class="field"><label>Nombre completo</label><input id="jName" placeholder="Roberto Escobar"></div>
         <div class="field"><label>Correo electrónico</label><input type="email" id="jEmail" placeholder="tucorreo@ejemplo.com"></div>
         <div class="field"><label>Teléfono</label><input id="jPhone" placeholder="(305) 555-0100"></div>
+        <div class="field"><label>Crea una contraseña</label><input type="password" id="jPass" placeholder="Mínimo 4 caracteres"></div>
         <div class="divider">forma de activación</div>
         <div class="seg" style="margin-bottom:14px"><button class="on" id="jSegCoupon" onclick="joinPay('coupon')">Tengo cupón</button><button id="jSegPay" onclick="joinPay('pay')">Pagar cuota</button></div>
         <div class="field" id="jCouponField"><label>Código de cupón</label><input id="jCoupon" placeholder="EC-XXXX-XXXX" style="font-family:'JetBrains Mono';letter-spacing:1px"></div>
@@ -747,7 +754,7 @@ async function seed(){
   ];
   samples.forEach(s=>{
     DB.counters.business++; const bid='B'+DB.counters.business;
-    DB.biz.push({id:bid,name:s.name,cat:s.cat,email:s.email,phone:s.phone,created:Date.now()});
+    DB.biz.push({id:bid,name:s.name,cat:s.cat,email:s.email,phone:s.phone,password:'demo123',created:Date.now()});
     DB.counters.offer++; DB.offers.push({id:'O'+DB.counters.offer,bizId:bid,biz:s.name,cat:s.cat,title:s.title,terms:s.terms,created:Date.now()});
   });
   DB.coupons['EC-DEMO-2026'] = {type:'member',active:true,note:'Cupón de prueba',created:Date.now(),uses:[]};
@@ -838,9 +845,10 @@ function closeJoin(){ $('#joinModal').classList.remove('show'); }
 function joinPay(m){ joinMethod=m; $('#jSegCoupon').classList.toggle('on',m==='coupon'); $('#jSegPay').classList.toggle('on',m==='pay'); $('#jCouponField').style.display=m==='coupon'?'block':'none'; $('#jPayField').style.display=m==='pay'?'block':'none'; }
 
 async function registerMember(){
-  const name=$('#jName').value.trim(), email=$('#jEmail').value.trim().toLowerCase(), phone=$('#jPhone').value.trim();
+  const name=$('#jName').value.trim(), email=$('#jEmail').value.trim().toLowerCase(), phone=$('#jPhone').value.trim(), pass=$('#jPass').value;
   if(!name||!email){ showAlert('joinAlert','Ingresa tu nombre y correo.','err'); return; }
-  if(DB.members.find(m=>m.email===email)){ showAlert('joinAlert','Ese correo ya tiene una membresía. Búscala en "Mi carnet".','err'); return; }
+  if(!pass||pass.length<4){ showAlert('joinAlert','Crea una contraseña de al menos 4 caracteres.','err'); return; }
+  if(DB.members.find(m=>m.email===email)){ showAlert('joinAlert','Ese correo ya tiene una cuenta. Entra en "Mi carnet".','err'); return; }
   let method='demo', couponCode=null;
   if(joinMethod==='coupon'){
     const code=$('#jCoupon').value.trim().toUpperCase();
@@ -851,19 +859,20 @@ async function registerMember(){
     c.uses=c.uses||[]; c.uses.push({name, email, role:'member', at:Date.now()}); method='cupón'; couponCode=code;
   }
   DB.counters.member++;
-  const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, tier:'MIEMBRO', method, couponCode, exp:'De por vida', token:genToken(), created:Date.now() };
+  const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, password:pass, tier:'MIEMBRO', method, couponCode, exp:'De por vida', token:genToken(), created:Date.now() };
   DB.members.push(m); DB.session={role:'member',id:m.id};
   await save();
   closeJoin(); applySession(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
-  ['jName','jEmail','jPhone','jCoupon'].forEach(i=>$('#'+i).value='');
+  ['jName','jEmail','jPhone','jPass','jCoupon'].forEach(i=>$('#'+i).value='');
   go('carnet');
 }
 
-function lookupMember(){
-  const email=$('#lookupEmail').value.trim().toLowerCase();
+function loginMember(){
+  const email=$('#lookupEmail').value.trim().toLowerCase(), pass=$('#lookupPass').value;
   const m=DB.members.find(x=>x.email===email);
-  if(!m){ showAlert('lookupAlert','No encontramos una membresía con ese correo.','err'); return; }
+  if(!m || (m.password||'')!==pass){ showAlert('lookupAlert','Correo o contraseña incorrectos.','err'); return; }
   DB.session={role:'member',id:m.id}; Store.set(K.session,DB.session);
+  $('#lookupPass').value='';
   applySession(); renderOffers(); renderCarnet();
 }
 function logoutMember(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); }
@@ -905,8 +914,10 @@ async function saveMyData(){
 function bizPay(m){ bizMethod=m; $('#bSegCoupon').classList.toggle('on',m==='coupon'); $('#bSegPay').classList.toggle('on',m==='pay'); $('#bCouponField').style.display=m==='coupon'?'block':'none'; $('#bPayField').style.display=m==='pay'?'block':'none'; }
 
 async function registerBusiness(){
-  const name=$('#bName').value.trim(), cat=$('#bCat').value, email=$('#bEmail').value.trim().toLowerCase(), phone=$('#bPhone').value.trim();
+  const name=$('#bName').value.trim(), cat=$('#bCat').value, email=$('#bEmail').value.trim().toLowerCase(), phone=$('#bPhone').value.trim(), pass=$('#bPass').value;
   if(!name||!email){ showAlert('bizAlert','Ingresa el nombre y correo del negocio.','err'); return; }
+  if(!pass||pass.length<4){ showAlert('bizAlert','Crea una contraseña de al menos 4 caracteres.','err'); return; }
+  if(DB.biz.find(x=>x.email===email)){ showAlert('bizAlert','Ese correo ya tiene un negocio. Entra arriba.','err'); return; }
   let method='demo';
   if(bizMethod==='coupon'){
     const code=$('#bCoupon').value.trim().toUpperCase(); const c=DB.coupons[code];
@@ -916,12 +927,21 @@ async function registerBusiness(){
     c.uses=c.uses||[]; c.uses.push({name, email, role:'business', at:Date.now()}); method='cupón';
   }
   DB.counters.business++;
-  const b={ id:'B'+DB.counters.business, name, cat, email, phone, method, created:Date.now() };
+  const b={ id:'B'+DB.counters.business, name, cat, email, phone, password:pass, method, created:Date.now() };
   DB.biz.push(b); DB.session={role:'business',id:b.id};
   await save();
   applySession(); renderStatsHero(); if(adminUnlocked) renderAdmin();
-  ['bName','bEmail','bPhone','bCoupon'].forEach(i=>$('#'+i).value='');
+  ['bName','bEmail','bPhone','bPass','bCoupon'].forEach(i=>$('#'+i).value='');
   renderBiz();
+}
+
+function loginBusiness(){
+  const email=$('#bizLoginEmail').value.trim().toLowerCase(), pass=$('#bizLoginPass').value;
+  const b=DB.biz.find(x=>x.email===email);
+  if(!b || (b.password||'')!==pass){ showAlert('bizLoginAlert','Correo o contraseña incorrectos.','err'); return; }
+  DB.session={role:'business',id:b.id}; Store.set(K.session,DB.session);
+  $('#bizLoginPass').value='';
+  applySession(); renderBiz();
 }
 
 function renderBiz(){
@@ -1059,10 +1079,10 @@ function renderAdmin(){
   }).join('') : '<tr><td colspan="5" class="empty">Sin cupones aún.</td></tr>';
 
   const mt=$('#memberTable tbody');
-  mt.innerHTML = DB.members.length ? DB.members.map(m=>`<tr><td style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(m.num)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${esc(m.tier)}</td><td>${new Date(m.created).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin miembros aún.</td></tr>';
+  mt.innerHTML = DB.members.length ? DB.members.map(m=>`<tr><td style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(m.num)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td style="font-family:'JetBrains Mono'">${esc(m.password||'—')}</td><td>${new Date(m.created).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin miembros aún.</td></tr>';
 
   const bt=$('#bizTable tbody');
-  bt.innerHTML = DB.biz.length ? DB.biz.map(b=>{ const n=DB.offers.filter(o=>o.bizId===b.id).length; return `<tr><td>${esc(b.name)}</td><td>${esc(b.cat)}</td><td>${esc(b.email)}</td><td>${n}</td></tr>`; }).join('') : '<tr><td colspan="4" class="empty">Sin negocios aún.</td></tr>';
+  bt.innerHTML = DB.biz.length ? DB.biz.map(b=>{ const n=DB.offers.filter(o=>o.bizId===b.id).length; return `<tr><td>${esc(b.name)}</td><td>${esc(b.cat)}</td><td>${esc(b.email)}</td><td style="font-family:'JetBrains Mono'">${esc(b.password||'—')}</td><td>${n}</td></tr>`; }).join('') : '<tr><td colspan="5" class="empty">Sin negocios aún.</td></tr>';
 
   const cont=$('#contactTable tbody');
   cont.innerHTML = (DB.contacts&&DB.contacts.length) ? DB.contacts.slice().reverse().map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td style="max-width:340px">${esc(c.desc)}</td><td>${new Date(c.at).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">Sin mensajes aún.</td></tr>';
