@@ -224,15 +224,48 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   .modal-wrap{position:relative}
 
   @media(max-width:860px){
-    .hero{grid-template-columns:1fr;gap:36px;padding:44px 0 36px;text-align:center}
+    .wrap{padding:0 18px}
+    section.block{padding:44px 0}
+    .hero{grid-template-columns:1fr;gap:34px;padding:40px 0 32px;text-align:center}
     .hero .lead{margin-left:auto;margin-right:auto}
     .hero-cta,.hero-meta{justify-content:center}
+    .hero-meta{gap:24px;flex-wrap:wrap}
     .card{transform:none}
     .g3,.g2{grid-template-columns:1fr}
+    .carnet-layout{grid-template-columns:1fr!important;gap:30px!important}
     .stat-grid{grid-template-columns:repeat(2,1fr)}
-    .nav-links{order:3;width:100%;justify-content:center}
-    .sess{margin:0 auto}
-    h2{font-size:25px}
+    .nav-in{gap:14px;padding:12px 18px}
+    .nav-links{order:3;width:100%;justify-content:center;gap:3px}
+    .sess{margin-left:auto}
+    h2{font-size:26px}
+    .sec-head{margin-bottom:22px}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 16px}
+    section.block{padding:34px 0}
+    h2{font-size:23px}
+    .eyebrow{font-size:11px;letter-spacing:.18em}
+    .lead{font-size:15.5px}
+    .hero{padding:28px 0 24px;gap:28px}
+    .hero h1{font-size:clamp(31px,8.5vw,42px)}
+    .hero .lead{font-size:16px;margin:18px auto 24px}
+    .hero-cta{flex-direction:column}
+    .hero-cta .btn{width:100%}
+    .hero-meta{gap:16px;margin-top:26px;padding-top:20px}
+    .hero-meta div span{font-size:21px}
+    .nav-in{padding:10px 14px;gap:10px}
+    .brand{font-size:16px;letter-spacing:.14em}
+    .brand .key{width:26px;height:26px}
+    .nav-links button{padding:7px 9px;font-size:12.5px}
+    .panel,.offer{border-radius:12px}
+    .modal{padding:24px 20px;border-radius:16px}
+    .modal h2{font-size:22px}
+    .modal .x{top:12px;right:14px}
+    .sec-head{flex-direction:column;align-items:flex-start;gap:12px}
+    .stat b{font-size:27px}
+    table{font-size:12.5px}
+    th,td{padding:9px 9px}
+    footer .foot-in:last-child{flex-direction:column;text-align:center;gap:10px}
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -590,7 +623,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.2</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.3</div>
   </div>
 </footer>
 
