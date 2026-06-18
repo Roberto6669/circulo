@@ -638,7 +638,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.6</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.7</div>
   </div>
 </footer>
 
@@ -739,6 +739,20 @@ async function init(){
   DB.session  = await Store.get(K.session, null);
   const seeded = await Store.get(K.seeded, false);
   if(!seeded){ await seed(); await Store.set(K.seeded, true); }
+  // Migración: cuentas viejas sin contraseña reciben demo123, se asegura el cliente demo y se convierte la sesión antigua a {email}
+  let _mig=false;
+  DB.biz.forEach(b=>{ if(!b.password){ b.password='demo123'; _mig=true; } });
+  DB.members.forEach(m=>{ if(!m.password){ m.password='demo123'; _mig=true; } });
+  if(!DB.members.find(m=>m.email==='cliente@demo.com')){
+    DB.counters.member=(DB.counters.member||0)+1;
+    DB.members.push({ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name:'Cliente Demo', email:'cliente@demo.com', phone:'(305) 555-0001', password:'demo123', tier:'FUNDADOR', method:'demo', couponCode:null, exp:'De por vida', token:genToken(), created:Date.now() });
+    _mig=true;
+  }
+  if(DB.session && DB.session.id && !DB.session.email){
+    const acc = DB.session.role==='business' ? DB.biz.find(x=>x.id===DB.session.id) : DB.members.find(x=>x.id===DB.session.id);
+    DB.session = acc ? {email:acc.email} : null; _mig=true;
+  }
+  if(_mig) await save();
   makeQR($('#heroQR'),'EL CÍRCULO',56);
   renderAll();
   applySession();
@@ -775,17 +789,21 @@ function go(v){
 }
 
 /* ============================================================ SESSION */
+function curMember(){ return DB.session && DB.session.email ? DB.members.find(m=>m.email===DB.session.email) : null; }
+function curBiz(){ return DB.session && DB.session.email ? DB.biz.find(b=>b.email===DB.session.email) : null; }
+
 function applySession(){
-  const s=DB.session, box=$('#sessBox'), txt=$('#sessTxt'), lo=$('#logoutBtn');
-  if(s && s.role==='member'){ const m=DB.members.find(x=>x.id===s.id); if(m){ box.classList.add('in'); txt.textContent=m.name.split(' ')[0]+' · Miembro'; lo.style.display='inline-flex'; return; } }
-  if(s && s.role==='business'){ const b=DB.biz.find(x=>x.id===s.id); if(b){ box.classList.add('in'); txt.textContent=b.name+' · Negocio'; lo.style.display='inline-flex'; return; } }
+  const box=$('#sessBox'), txt=$('#sessTxt'), lo=$('#logoutBtn');
+  const m=curMember(), b=curBiz();
+  if(m){ box.classList.add('in'); lo.style.display='inline-flex'; txt.textContent=m.name.split(' ')[0]+(b?' · Miembro + Negocio':' · Miembro'); return; }
+  if(b){ box.classList.add('in'); lo.style.display='inline-flex'; txt.textContent=b.name+' · Negocio'; return; }
   box.classList.remove('in'); txt.textContent='Invitado'; lo.style.display='none';
 }
 
 function goToMyArea(){
-  const s=DB.session;
-  if(s && s.role==='member') go('carnet');
-  else if(s && s.role==='business') go('negocios');
+  const m=curMember(), b=curBiz();
+  if(m) go('carnet');
+  else if(b) go('negocios');
   else openJoin('member');
 }
 
@@ -827,7 +845,7 @@ function offerCardHTML(o, unlocked){
 }
 
 function renderOffers(){
-  const unlocked = DB.session && DB.session.role==='member';
+  const unlocked = !!curMember();
   $('#featuredOffers').innerHTML = DB.offers.slice(0,3).map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas.</p>';
   $('#allOffers').innerHTML = DB.offers.map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas publicadas.</p>';
   $('#ofertasCta').style.display = unlocked ? 'none':'inline-flex';
@@ -862,27 +880,32 @@ async function registerMember(){
   }
   DB.counters.member++;
   const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, password:pass, tier:'MIEMBRO', method, couponCode, exp:'De por vida', token:genToken(), created:Date.now() };
-  DB.members.push(m); DB.session={role:'member',id:m.id};
+  DB.members.push(m); DB.session={email:m.email};
   await save();
   closeJoin(); applySession(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
   ['jName','jEmail','jPhone','jPass','jCoupon'].forEach(i=>$('#'+i).value='');
   go('carnet');
 }
 
-function loginMember(){
-  const email=$('#lookupEmail').value.trim().toLowerCase(), pass=$('#lookupPass').value;
+function doLogin(email, pass, alertId){
+  email=(email||'').trim().toLowerCase();
+  if(!email){ showAlert(alertId,'Ingresa tu correo.','err'); return; }
   const m=DB.members.find(x=>x.email===email);
-  if(!m || (m.password||'')!==pass){ showAlert('lookupAlert','Correo o contraseña incorrectos.','err'); return; }
-  DB.session={role:'member',id:m.id}; Store.set(K.session,DB.session);
-  $('#lookupPass').value='';
-  applySession(); renderOffers(); renderCarnet();
+  const b=DB.biz.find(x=>x.email===email);
+  if(!m && !b){ showAlert(alertId,'No encontramos una cuenta con ese correo.','err'); return; }
+  const passOK = (m && (m.password||'')===pass) || (b && (b.password||'')===pass);
+  if(!passOK){ showAlert(alertId,'Contraseña incorrecta.','err'); return; }
+  DB.session={email:email}; Store.set(K.session,DB.session);
+  ['lookupPass','bizLoginPass'].forEach(i=>{ const el=$('#'+i); if(el) el.value=''; });
+  applySession(); renderOffers(); renderCarnet(); renderBiz();
+  go(m ? 'carnet' : 'negocios');
 }
+function loginMember(){ doLogin($('#lookupEmail').value, $('#lookupPass').value, 'lookupAlert'); }
 function logoutMember(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); }
 function logout(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); renderBiz(); go('inicio'); }
 
 function renderCarnet(){
-  const isM = DB.session && DB.session.role==='member';
-  const m = isM ? DB.members.find(x=>x.id===DB.session.id) : null;
+  const m = curMember();
   $('#carnetEmpty').style.display = m ? 'none':'block';
   $('#carnetShow').style.display = m ? 'block':'none';
   if(!m) return;
@@ -897,13 +920,13 @@ function renderCarnet(){
 }
 
 function editMyData(){
-  const m=DB.members.find(x=>x.id===DB.session.id); if(!m) return;
+  const m=curMember(); if(!m) return;
   $('#mdInName').value=m.name; $('#mdInEmail').value=m.email; $('#mdInPhone').value=m.phone||'';
   $('#mdView').style.display='none'; $('#mdEdit').style.display='block'; $('#mdEditBtn').style.display='none';
 }
 function cancelMyData(){ $('#mdView').style.display='grid'; $('#mdEdit').style.display='none'; $('#mdEditBtn').style.display='inline-flex'; }
 async function saveMyData(){
-  const m=DB.members.find(x=>x.id===DB.session.id); if(!m) return;
+  const m=curMember(); if(!m) return;
   const name=$('#mdInName').value.trim(), email=$('#mdInEmail').value.trim().toLowerCase(), phone=$('#mdInPhone').value.trim();
   if(!name||!email){ showAlert('mdAlert','Nombre y correo son obligatorios.','err'); return; }
   if(DB.members.some(x=>x.id!==m.id && x.email===email)){ showAlert('mdAlert','Ese correo ya está en uso por otro miembro.','err'); return; }
@@ -931,25 +954,17 @@ async function registerBusiness(){
   }
   DB.counters.business++;
   const b={ id:'B'+DB.counters.business, name, cat, email, phone, password:pass, method, created:Date.now() };
-  DB.biz.push(b); DB.session={role:'business',id:b.id};
+  DB.biz.push(b); DB.session={email:b.email};
   await save();
   applySession(); renderStatsHero(); if(adminUnlocked) renderAdmin();
   ['bName','bEmail','bPhone','bPass','bCoupon'].forEach(i=>$('#'+i).value='');
   renderBiz();
 }
 
-function loginBusiness(){
-  const email=$('#bizLoginEmail').value.trim().toLowerCase(), pass=$('#bizLoginPass').value;
-  const b=DB.biz.find(x=>x.email===email);
-  if(!b || (b.password||'')!==pass){ showAlert('bizLoginAlert','Correo o contraseña incorrectos.','err'); return; }
-  DB.session={role:'business',id:b.id}; Store.set(K.session,DB.session);
-  $('#bizLoginPass').value='';
-  applySession(); renderBiz();
-}
+function loginBusiness(){ doLogin($('#bizLoginEmail').value, $('#bizLoginPass').value, 'bizLoginAlert'); }
 
 function renderBiz(){
-  const isB = DB.session && DB.session.role==='business';
-  const b = isB ? DB.biz.find(x=>x.id===DB.session.id) : null;
+  const b = curBiz();
   $('#bizIntro').style.display = b ? 'none':'block';
   $('#bizDash').style.display = b ? 'block':'none';
   if(!b) return;
@@ -959,7 +974,7 @@ function renderBiz(){
 }
 
 async function publishOffer(){
-  const b=DB.biz.find(x=>x.id===DB.session.id);
+  const b=curBiz();
   const title=$('#oTitle').value.trim(), terms=$('#oTerms').value.trim();
   if(!title){ showAlert('offerOk','Escribe el título del descuento.','err'); return; }
   if(editingOfferId){
