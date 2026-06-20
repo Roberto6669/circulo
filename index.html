@@ -274,6 +274,30 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
     footer .foot-in:last-child{flex-direction:column;text-align:center;gap:10px}
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---------- About Us ---------- */
+  .about-hero{text-align:center;max-width:760px;margin:0 auto 54px}
+  .about-sec{margin-bottom:48px}
+  .about-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  .about-ico{width:48px;height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--line2);color:var(--gold-lt);flex:none}
+  .about-ico svg{width:25px;height:25px}
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}
+  .about-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:flex;gap:13px;align-items:flex-start}
+  .about-card .chk{color:var(--gold-lt);flex:none;margin-top:1px}
+  .about-card b{display:block;margin-bottom:3px;font-size:15px}
+  .about-card span{color:var(--muted);font-size:13.5px;line-height:1.5}
+  .games-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  .game-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px}
+  .game-card .gname{font-weight:600;font-size:14.5px;margin-bottom:3px}
+  .game-card .gtag{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--gold-lt);font-weight:600}
+  .founder-panel{background:linear-gradient(160deg,#FFFDF6,#F8EFD4);border:1.5px solid var(--gold);border-radius:12px;padding:36px;box-shadow:0 24px 60px -30px rgba(201,162,39,.5)}
+  .founder-list{display:grid;grid-template-columns:1fr 1fr;gap:14px 26px;margin:24px 0 0}
+  .founder-list>div{display:flex;gap:11px;align-items:flex-start;font-size:14.5px}
+  .founder-list .fchk{color:var(--gold-dk);font-weight:700;flex:none}
+  .founder-note{margin-top:26px;padding:15px 18px;background:rgba(201,162,39,.12);border:1px dashed var(--gold-dk);border-radius:8px;font-size:14px;color:#8a6d15;font-weight:600;display:flex;gap:10px;align-items:flex-start}
+  .about-cta{text-align:center;background:var(--surface2);border:1px solid var(--line2);border-radius:12px;padding:40px 24px;margin-top:8px}
+  @media(max-width:760px){ .about-grid{grid-template-columns:1fr} .games-grid{grid-template-columns:1fr 1fr} .founder-list{grid-template-columns:1fr} .founder-panel{padding:26px 22px} }
+  @media(max-width:460px){ .games-grid{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -629,16 +653,111 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       </div>
     </section>
   </div>
+
+  <!-- ============ ABOUT US ============ -->
+  <div class="view" id="v-about">
+    <div class="wrap">
+      <section class="block" style="border-top:none;padding-top:48px">
+        <div class="about-hero">
+          <div class="eyebrow">Sobre el club</div>
+          <h2 style="font-size:clamp(30px,4.5vw,44px);margin:6px 0 18px">Más que descuentos: tu círculo de bienestar financiero</h2>
+          <p class="lead" style="margin:0 auto 16px">CÍRCULO es un club privado creado para la comunidad latina de Miami. Aquí no solo ahorras en negocios locales — aprendes a manejar tu dinero, sales de deudas, mejoras tu crédito, te conectas con otros miembros y te diviertes en el camino. Una sola membresía, beneficios de por vida.</p>
+          <p class="lead" style="margin:0 auto">Nacimos de una idea simple: el dinero se entiende mejor en comunidad. Por eso reunimos en un solo lugar descuentos reales, educación financiera práctica y una red de personas y negocios que se apoyan entre sí. Cada dólar que ahorras también te acerca a tus metas.</p>
+        </div>
+
+        <!-- Educación financiera -->
+        <div class="about-sec">
+          <div class="about-head">
+            <div class="about-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg></div>
+            <div><div class="eyebrow">Aprende</div><h3 style="font-family:Fraunces;font-size:25px">Educación financiera</h3></div>
+          </div>
+          <p class="lead">Contenido práctico para tomar el control de tu dinero, sin tecnicismos.</p>
+          <div class="about-grid">
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Video semanal de 5 minutos</b><span>Un tema práctico sobre dinero cada semana, directo y sin relleno.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Biblioteca de cursos básicos</b><span>Aprende a tu ritmo: presupuesto, ahorro, inversión y mucho más.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Guía para eliminar deudas</b><span>Un plan paso a paso para salir de deudas y mantenerte libre.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Guía para mejorar el crédito</b><span>Estrategias reales para subir tu puntaje de crédito.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Calculadoras financieras</b><span>Herramientas para planear pagos, inversiones y tus metas.</span></div></div>
+          </div>
+        </div>
+
+        <!-- Comunidad -->
+        <div class="about-sec">
+          <div class="about-head">
+            <div class="about-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.5a3 3 0 0 1 0 5.8M17 15c2.4.4 4 2.3 4 5"/></svg></div>
+            <div><div class="eyebrow">Conecta</div><h3 style="font-family:Fraunces;font-size:25px">Comunidad</h3></div>
+          </div>
+          <p class="lead">Una red de personas y negocios que crecen juntos.</p>
+          <div class="about-grid">
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Networking entre miembros</b><span>Conéctate con personas que persiguen las mismas metas.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Directorio de negocios afiliados</b><span>Encuentra y apoya a los negocios de la comunidad.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Publicidad gratuita para emprendedores</b><span>Si eres miembro y tienes negocio, te damos visibilidad sin costo.</span></div></div>
+            <div class="about-card"><svg class="chk" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg><div><b>Eventos virtuales mensuales</b><span>Charlas, talleres y encuentros en vivo cada mes.</span></div></div>
+          </div>
+        </div>
+
+        <!-- Juegos -->
+        <div class="about-sec">
+          <div class="about-head">
+            <div class="about-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/></svg></div>
+            <div><div class="eyebrow">Diviértete</div><h3 style="font-family:Fraunces;font-size:25px">Juegos individuales</h3></div>
+          </div>
+          <p class="lead">Aprende y gana mientras juegas. Acumula puntos y premios.</p>
+          <div class="games-grid">
+            <div class="game-card"><div class="gname">Trivia de cultura general</div><div class="gtag">Gana puntos</div></div>
+            <div class="game-card"><div class="gname">Trivia financiera</div><div class="gtag">Crédito · Inversiones · Impuestos</div></div>
+            <div class="game-card"><div class="gname">Ruleta diaria de premios</div><div class="gtag">Premio diario</div></div>
+            <div class="game-card"><div class="gname">Raspa y gana virtual</div><div class="gtag">Suerte instantánea</div></div>
+            <div class="game-card"><div class="gname">Juego de memoria</div><div class="gtag">Agilidad mental</div></div>
+            <div class="game-card"><div class="gname">Sudoku</div><div class="gtag">Lógica</div></div>
+            <div class="game-card"><div class="gname">Rompecabezas</div><div class="gtag">Concentración</div></div>
+            <div class="game-card"><div class="gname">Búsqueda del tesoro digital</div><div class="gtag">Aventura</div></div>
+            <div class="game-card"><div class="gname">Desafíos de hábitos financieros</div><div class="gtag">Reto diario</div></div>
+            <div class="game-card"><div class="gname">Quiz de personalidad financiera</div><div class="gtag">Descúbrete</div></div>
+          </div>
+        </div>
+
+        <!-- Fundadores -->
+        <div class="about-sec">
+          <div class="founder-panel">
+            <div class="about-head" style="margin-bottom:8px">
+              <div class="about-ico" style="background:linear-gradient(135deg,#E8C85A,#C9A227);color:#3a2e0a;border-color:var(--gold-dk)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l4 4 5-6 5 6 4-4-2 12H5L3 7Z"/></svg></div>
+              <div><div class="eyebrow" style="color:var(--gold-dk)">Edición limitada</div><h3 style="font-family:Fraunces;font-size:25px">Beneficios exclusivos para Fundadores</h3></div>
+            </div>
+            <p style="color:#7a6418;font-size:15px;max-width:64ch;line-height:1.6">Los primeros miembros del club reciben un estatus que nunca volverá a estar disponible. Ser Fundador es para siempre.</p>
+            <div class="founder-list">
+              <div><span class="fchk">✓</span><span>Membresía sin mensualidad de por vida.</span></div>
+              <div><span class="fchk">✓</span><span>Insignia especial de Fundador.</span></div>
+              <div><span class="fchk">✓</span><span>Acceso prioritario a nuevas funciones y beneficios.</span></div>
+              <div><span class="fchk">✓</span><span>Reconocimiento permanente dentro de la comunidad.</span></div>
+              <div><span class="fchk">✓</span><span>Participación preferencial en promociones y eventos especiales.</span></div>
+              <div><span class="fchk">✓</span><span>Beneficios exclusivos reservados únicamente para Fundadores.</span></div>
+            </div>
+            <div class="founder-note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Una vez alcanzados los primeros 5,000 miembros, este beneficio se cerrará de forma permanente para nuevos afiliados.</span></div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="about-cta">
+          <div class="eyebrow">Únete hoy</div>
+          <h2 style="font-size:clamp(26px,4vw,38px);margin:6px 0 10px">¿Listo para entrar al CÍRCULO?</h2>
+          <p class="lead" style="margin:0 auto 22px">Hazte miembro de por vida con un solo pago y empieza a ahorrar, aprender y ganar.</p>
+          <button class="btn btn-gold" onclick="openJoin('member')" style="display:inline-flex">Hazte miembro</button>
+        </div>
+      </section>
+    </div>
+  </div>
 </div>
 
 <footer>
   <div class="foot-in" style="justify-content:center;margin-bottom:22px;padding-bottom:24px;border-bottom:1px solid var(--line)">
+    <button class="btn btn-ghost btn-sm" onclick="go('about')">About Us</button>
     <button class="btn btn-ghost btn-sm" onclick="openContact()">Contact Us</button>
     <button class="btn btn-ghost btn-sm" onclick="go('admin')">Admin</button>
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.7</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.8</div>
   </div>
 </footer>
 
