@@ -1,13 +1,6 @@
-.DS_Store
-*.icloud
-
-# Python
-__pycache__/
 *.pyc
+__pycache__/
 venv/
-.venv/
-
-# Base de datos local (SQLite)
-circulo.db
-*.sqlite
-*.sqlite3
+instance/
+*.db
+.env
