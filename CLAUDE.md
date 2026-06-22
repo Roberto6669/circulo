@@ -53,16 +53,20 @@ Lo construye **Roberto Escobar Citty**, RVP de Primerica en Miami. Por eso el pr
 
 ## 3. ⭐ DÓNDE ESTAMOS PARADOS (estado actual)
 
-- **Frontend:** versión **v2.0**, ✅ **conectado al API.** Ya NO usa `localStorage` para los datos:
-  todo pasa por `fetch` a `/api/...`. El token de login se guarda en `localStorage` y se manda en el
-  header `Authorization: Bearer`. Capa `API` + objeto `Session` (ver sección 11).
+- **Frontend:** versión **v2.1**, ✅ **conectado al API** + **pantalla "Mi equipo" (Fase 3).** Ya NO usa
+  `localStorage` para los datos: todo pasa por `fetch` a `/api/...`. El token de login se guarda en
+  `localStorage` y se manda en el header `Authorization: Bearer`. Capa `API` + objeto `Session` (sección 11).
+  La sección "Mi equipo" (dentro de Mi carnet) muestra el link de invitación (`/?ref=<código>`), referidos
+  directos, equipo completo por niveles y métricas; el link de referido funciona de punta a punta (al
+  abrirlo, el registro toma al patrocinador y arma el árbol).
 - **Backend (Fase 1 + extras de Fase 2):** ✅ **COMPLETO y probado.** Auth con contraseñas encriptadas
   (scrypt), miembros, negocios, ofertas, cupones, contacto, referidos/equipos. En la Fase 2 se agregaron:
   `/api/stats` (público), `/api/me/update`, `PUT /api/offers/<id>`, `/api/validate/<code>`,
   `GET /api/admin/coupons` y `POST /api/admin/coupons/<code>/toggle`. Verificado con 23 pruebas e2e (test client).
 - **Despliegue:** el código completo está en GitHub (`Roberto6669/circulo`), se despliega en Render vía
   Blueprint. URL esperada: `https://circulo-backend.onrender.com`.
-- **✅ Fase 2 LISTA — frontend y backend conectados.** Lo siguiente es la **Fase 3 (pantalla "Mi equipo")**.
+- **✅ Fases 2 y 3 LISTAS — frontend conectado + pantalla "Mi equipo" con link de referido funcional.**
+  Lo siguiente es la **Fase 4 (premios y promociones por tamaño de equipo)**.
 
 > **Limitaciones conocidas (para retomar):** (1) el cupón en el registro se valida pero su "uso" NO se
 > registra en el server (no hay endpoint de canje aún), así que el contador de usos en admin queda en 0.
@@ -75,9 +79,9 @@ Lo construye **Roberto Escobar Citty**, RVP de Primerica en Miami. Por eso el pr
 1. **Fase 1 — Backend ✅ HECHO.** API + base de datos + auth + referidos/equipos.
 2. **Fase 2 — Conectar el frontend a la API ✅ HECHO.** El `localStorage` de datos se reemplazó por
    `fetch` a `/api/...`; el token se guarda y se manda en cada llamada (capa `API` + `Session`).
-3. **Fase 3 — Pantalla "Mi equipo" (← SIGUIENTE).** Link de referido para compartir, referidos directos, árbol del
-   equipo, tamaño del equipo. (Backend ya listo: `/api/team`, `/api/referrals`.)
-4. **Fase 4 — Premios y promociones.** Puntos, rankings (`/api/admin/leaderboard` ya existe),
+3. **Fase 3 — Pantalla "Mi equipo" ✅ HECHO.** Link de referido (`/?ref=<código>`), referidos directos,
+   árbol del equipo por niveles, métricas. El link funciona de punta a punta (`captureRef` + `referral_code`).
+4. **Fase 4 — Premios y promociones (← SIGUIENTE).** Puntos, rankings (`/api/admin/leaderboard` ya existe),
    recompensas por tamaño de equipo.
 
 ## 5. ⭐ El modelo de referidos / equipos (estilo Primerica)
@@ -172,6 +176,10 @@ Base: la misma URL del sitio (llamadas relativas a `/api/...`). El token de logi
   `logout()`, `saveMyData()` (→ `/api/me/update`), `publishOffer()` (POST/PUT), `deleteOffer()`,
   `validateMember()` (→ `/api/validate/<code>`), `renderCarnet()`, `renderBiz()`, `renderOffers()`,
   `renderAdmin()` (usa el PIN guardado en `adminPin`), `generateCoupons()`, `toggleCoupon()`.
+- **Mi equipo (Fase 3):** `renderTeam()` (→ `/api/team`) pinta link, métricas, directos y árbol por niveles
+  dentro del carnet; `copyRefLink()` copia el link; `captureRef()` (en `init`) lee `?ref=` de la URL, lo
+  valida con `/api/validate`, lo recuerda en `localStorage` (`circulo:ref`) y `registerMember()` lo manda
+  como `referral_code`. `openJoin()` muestra el banner "Te invitó X" (`#joinRefBanner`).
 - **Mapeo de campos API→UI:** la oferta del API trae `business`/`category`/`business_id`; `normOffer`
   los pasa a `biz`/`cat`/`bizId`. Los `id` de oferta ahora son **números** (no 'O1'): los `onclick`
   pasan el id sin comillas. El carnet usa `member_number` (no `num`) y `referral_code` para el QR.
@@ -253,6 +261,6 @@ git push
 
 ---
 
-**Resumen en una frase:** El backend Flask + Postgres y el frontend v2.0 ya están **conectados por el API**
-(Fases 1 y 2 hechas); todo usa la base de datos real. El siguiente trabajo es la **Fase 3 — pantalla
-"Mi equipo"** (link de referido + árbol del equipo, con `/api/team` y `/api/referrals` ya listos).
+**Resumen en una frase:** Backend Flask + Postgres y frontend v2.1 **conectados por el API**, con la
+**pantalla "Mi equipo" y el link de referido funcionando de punta a punta** (Fases 1, 2 y 3 hechas).
+El siguiente trabajo es la **Fase 4 — premios y promociones por tamaño de equipo**.

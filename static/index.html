@@ -494,6 +494,44 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
             <div style="display:flex;gap:10px"><button class="btn btn-gold btn-sm" onclick="saveMyData()">Guardar cambios</button><button class="btn btn-ghost btn-sm" onclick="cancelMyData()">Cancelar</button></div>
           </div>
         </div>
+
+        <div class="panel" id="teamPanel" style="padding:24px;margin-top:24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:12px;flex-wrap:wrap">
+            <h3 style="font-family:Fraunces;font-size:20px">Mi equipo</h3>
+            <span class="badge muted">Estilo Primerica</span>
+          </div>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 18px">Comparte tu link de invitación. Cada persona que se une con él entra a tu equipo y cuenta para tus premios.</p>
+
+          <div style="margin-bottom:18px">
+            <small style="color:var(--muted);font-size:12px">Tu link de invitación</small>
+            <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+              <input id="refLink" readonly onclick="this.select()" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg2);font-family:'JetBrains Mono';font-size:12.5px;color:var(--cream)">
+              <button class="btn btn-gold btn-sm" onclick="copyRefLink()">Copiar link</button>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--muted)">Tu código: <code id="refCode" style="font-family:'JetBrains Mono';color:var(--gold-lt)">—</code></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:8px">
+            <div style="background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:16px;text-align:center">
+              <div id="teamDirect" style="font-family:'JetBrains Mono';font-size:26px;font-weight:700;color:var(--gold-lt)">0</div>
+              <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Directos</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:16px;text-align:center">
+              <div id="teamSize" style="font-family:'JetBrains Mono';font-size:26px;font-weight:700;color:var(--gold-lt)">0</div>
+              <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Equipo total</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:16px;text-align:center">
+              <div id="teamDepth" style="font-family:'JetBrains Mono';font-size:26px;font-weight:700;color:var(--gold-lt)">0</div>
+              <div style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Niveles</div>
+            </div>
+          </div>
+
+          <h4 style="font-family:Fraunces;font-size:16px;margin:22px 0 2px">Referidos directos</h4>
+          <div id="teamDirectList"></div>
+
+          <h4 style="font-family:Fraunces;font-size:16px;margin:22px 0 2px">Todo el equipo</h4>
+          <div id="teamTree"></div>
+        </div>
       </div>
     </section>
   </div>
@@ -757,7 +795,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v2.0</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v2.1</div>
   </div>
 </footer>
 
@@ -770,6 +808,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
       <h2 id="joinTitle">Hazte miembro</h2>
       <p style="color:var(--muted);font-size:14px;margin:6px 0 20px" id="joinSub">Activa tu carnet con un cupón o un pago único de $1.99.</p>
       <div class="alert err" id="joinAlert"></div>
+      <div id="joinRefBanner" style="display:none;background:var(--ok-bg);border:1px solid var(--ok);color:var(--ok);border-radius:6px;padding:10px 12px;font-size:13px;margin-bottom:14px"></div>
       <div id="joinForm">
         <div class="field"><label>Nombre completo</label><input id="jName" placeholder="Roberto Escobar"></div>
         <div class="field"><label>Correo electrónico</label><input type="email" id="jEmail" placeholder="tucorreo@ejemplo.com"></div>
@@ -821,8 +860,10 @@ let adminUnlocked = false;
 let joinRole = 'member', joinMethod = 'coupon', bizMethod = 'coupon';
 let editingOfferId = null;
 let offerImageData = null;
+let pendingRef = null, pendingRefName = null;   // código de referido capturado del link ?ref=
 const MEMBER_FEE = 1.99, BUSINESS_FEE = 99;
 const TOKEN_KEY = 'circulo:token';
+const REF_KEY = 'circulo:ref';
 
 /* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
@@ -875,10 +916,33 @@ async function loadOffers(){
 /* ============================================================ INIT */
 async function init(){
   await restoreSession();
+  await captureRef();
   await loadOffers();
   makeQR($('#heroQR'),'EL CÍRCULO',56);
   renderAll();
   applySession();
+}
+
+/* Captura el código de referido del link (?ref=EC-2026-0001), lo valida y lo
+   recuerda hasta que la persona se registra. Limpia el ?ref de la URL. */
+async function captureRef(){
+  let ref = null;
+  try{ ref = new URL(location.href).searchParams.get('ref'); }catch(e){}
+  if(!ref) ref = localStorage.getItem(REF_KEY);
+  if(ref){
+    ref = ref.trim().toUpperCase();
+    const v = await API.get('/api/validate/'+encodeURIComponent(ref));
+    if(v.ok && v.data.type==='member'){
+      pendingRef = ref; pendingRefName = (v.data.member && v.data.member.name) || null;
+      localStorage.setItem(REF_KEY, ref);
+    } else {
+      localStorage.removeItem(REF_KEY);
+    }
+  }
+  try{
+    const url = new URL(location.href);
+    if(url.searchParams.has('ref')){ url.searchParams.delete('ref'); history.replaceState({}, '', url.pathname + url.search + url.hash); }
+  }catch(e){}
 }
 async function restoreSession(){
   const token = localStorage.getItem(TOKEN_KEY);
@@ -969,6 +1033,11 @@ function openJoin(role){
   $('#joinTitle').textContent = role==='business' ? 'Registra tu negocio' : 'Hazte miembro';
   $('#joinSub').textContent = role==='business' ? 'Publica ofertas para los miembros del club.' : 'Activa tu carnet con un cupón o un pago único de $1.99.';
   if(role==='business'){ closeJoin(); go('negocios'); return; }
+  const banner=$('#joinRefBanner');
+  if(banner){
+    if(pendingRef){ banner.style.display='block'; banner.textContent='✓ Te invitó '+(pendingRefName||pendingRef)+' — al unirte entrarás a su equipo.'; }
+    else banner.style.display='none';
+  }
   $('#joinModal').classList.add('show');
 }
 function closeJoin(){ $('#joinModal').classList.remove('show'); }
@@ -986,8 +1055,11 @@ async function registerMember(){
     if(!c.active){ showAlert('joinAlert','Ese cupón está desactivado.','err'); return; }
     if(c.kind!=='member'){ showAlert('joinAlert','Ese cupón es para negocios, no para membresía.','err'); return; }
   }
-  const r = await API.post('/api/register/member', { name, email, phone, password: pass });
+  const body = { name, email, phone, password: pass };
+  if(pendingRef) body.referral_code = pendingRef;
+  const r = await API.post('/api/register/member', body);
   if(!r.ok){ showAlert('joinAlert', r.data.error||'No se pudo crear la cuenta.','err'); return; }
+  pendingRef=null; pendingRefName=null; localStorage.removeItem(REF_KEY);
   setSession(r.data.token, 'member', r.data.member);
   closeJoin(); applySession();
   await loadOffers(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
@@ -1023,6 +1095,61 @@ function renderCarnet(){
   $('#mdName').textContent=m.name; $('#mdEmail').textContent=m.email; $('#mdPhone').textContent=m.phone||'—';
   $('#mdSince').textContent=fmtDate(m.created_at); $('#mdNum').textContent=num;
   $('#mdView').style.display='grid'; $('#mdEdit').style.display='none'; $('#mdEditBtn').style.display='inline-flex';
+  renderTeam();
+}
+
+/* ============================================================ MI EQUIPO (Fase 3) */
+function refLinkFor(code){ return location.origin + '/?ref=' + encodeURIComponent(code); }
+
+async function renderTeam(){
+  const m = curMember();
+  if(!m){ return; }
+  const code = m.referral_code || m.member_number || '';
+  const link = refLinkFor(code);
+  const li = $('#refLink'); if(li) li.value = link;
+  const rc = $('#refCode'); if(rc) rc.textContent = code || '—';
+
+  const r = await API.get('/api/team');
+  if(!r.ok){ return; }
+  const d = r.data;
+  $('#teamDirect').textContent = d.direct_count || 0;
+  $('#teamSize').textContent   = d.team_size || 0;
+  $('#teamDepth').textContent  = d.depth || 0;
+
+  const direct = d.direct || [];
+  $('#teamDirectList').innerHTML = direct.length
+    ? direct.map(p=>teamRowHTML(p)).join('')
+    : '<p class="empty" style="padding:14px 0">Aún no tienes referidos directos. ¡Comparte tu link!</p>';
+
+  const team = (d.team || []).slice().sort((a,b)=>(a.level||0)-(b.level||0));
+  if(!team.length){
+    $('#teamTree').innerHTML = '<p class="empty" style="padding:14px 0">Tu equipo aparecerá aquí a medida que crezca.</p>';
+  } else {
+    const byLevel = {};
+    team.forEach(p=>{ const lv=p.level||1; (byLevel[lv]=byLevel[lv]||[]).push(p); });
+    $('#teamTree').innerHTML = Object.keys(byLevel).map(lv=>{
+      const head = `<div style="margin:14px 0 8px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px">Nivel ${lv} · ${byLevel[lv].length} ${byLevel[lv].length===1?'persona':'personas'}</div>`;
+      return head + byLevel[lv].map(p=>teamRowHTML(p)).join('');
+    }).join('');
+  }
+}
+
+function teamRowHTML(p){
+  const ini = esc(((p.name||'?').trim().charAt(0)||'?').toUpperCase());
+  const tier = (p.tier==='FUNDADOR') ? '<span class="badge ok" style="font-size:10px">FUNDADOR</span>' : '';
+  return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)">
+    <div style="width:34px;height:34px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-family:Fraunces;color:var(--gold-lt);flex:none">${ini}</div>
+    <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(p.name||'—')} ${tier}</div>
+      <div style="font-family:'JetBrains Mono';font-size:12px;color:var(--muted)">${esc(p.member_number||'')}</div></div>
+  </div>`;
+}
+
+function copyRefLink(){
+  const li=$('#refLink'); if(!li) return;
+  const txt=li.value;
+  const done=()=>showAlert('mdAlert','Link copiado. ¡Compártelo!','ok');
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(()=>{ li.select(); document.execCommand('copy'); done(); }); }
+  else { li.select(); try{ document.execCommand('copy'); }catch(e){} done(); }
 }
 
 function editMyData(){
