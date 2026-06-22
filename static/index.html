@@ -638,12 +638,12 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
         <div class="panel" style="padding:24px;margin-bottom:18px">
           <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Miembros</h3>
-          <div style="overflow:auto"><table id="memberTable"><thead><tr><th>Número</th><th>Nombre</th><th>Usuario (correo)</th><th>Contraseña</th><th>Alta</th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto"><table id="memberTable"><thead><tr><th>Número</th><th>Nombre</th><th>Usuario (correo)</th><th>Equipo</th><th>Alta</th></tr></thead><tbody></tbody></table></div>
         </div>
 
         <div class="panel" style="padding:24px">
           <h3 style="font-family:Fraunces;font-size:21px;margin-bottom:14px">Negocios aliados</h3>
-          <div style="overflow:auto"><table id="bizTable"><thead><tr><th>Negocio</th><th>Categoría</th><th>Usuario (correo)</th><th>Contraseña</th><th>Ofertas</th></tr></thead><tbody></tbody></table></div>
+          <div style="overflow:auto"><table id="bizTable"><thead><tr><th>Negocio</th><th>Categoría</th><th>Usuario (correo)</th><th>Teléfono</th><th>Ofertas</th></tr></thead><tbody></tbody></table></div>
         </div>
 
         <div class="panel" style="padding:24px;margin-top:18px">
@@ -757,7 +757,7 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
   </div>
   <div class="foot-in">
     <div style="display:flex;align-items:center;gap:8px"><img class="foot-logo" src="" alt=""><span>CÍRCULO · CLUB EXCLUSIVO — MIAMI, FL</span></div>
-    <div>Hecho por ROBERTO ESCOBAR CITTY · v1.9</div>
+    <div>Hecho por ROBERTO ESCOBAR CITTY · v2.0</div>
   </div>
 </footer>
 
@@ -807,93 +807,86 @@ var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this
 
 <script>
 /* ============================================================
-   EL CÍRCULO — almacenamiento (window.storage en Claude, localStorage al desplegar)
+   EL CÍRCULO — Frontend conectado al API (Fase 2)
+   Toda la data vive en el backend Flask (/api/...). El token de
+   login se guarda en localStorage; cada llamada protegida lo manda
+   en el header Authorization: Bearer <token>.
    ============================================================ */
-const Store = {
-  has: typeof window.storage !== 'undefined' && window.storage,
-  async get(k, def){
-    try{
-      if(this.has){ const r = await window.storage.get(k); return r ? JSON.parse(r.value) : def; }
-      const v = localStorage.getItem(k); return v ? JSON.parse(v) : def;
-    }catch(e){ return def; }
-  },
-  async set(k, v){
-    try{
-      if(this.has){ await window.storage.set(k, JSON.stringify(v)); }
-      else { localStorage.setItem(k, JSON.stringify(v)); }
-    }catch(e){ console.error('storage', e); }
-  }
-};
-const K = { members:'circulo:members', biz:'circulo:businesses', offers:'circulo:offers', coupons:'circulo:coupons', counters:'circulo:counters', session:'circulo:session', contacts:'circulo:contacts', seeded:'circulo:seeded' };
 
-let DB = { members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, contacts:[], session:null };
-
-const ADMIN_PIN = '2026';            // ← cambia esto antes de publicar
-const MEMBER_FEE = 1.99, BUSINESS_FEE = 99;
+/* ---------- estado ---------- */
+const Session = { token: null, role: null, profile: null };
+let OFFERS = [];
+let adminPin = null;            // PIN de admin en memoria (no se persiste)
 let adminUnlocked = false;
 let joinRole = 'member', joinMethod = 'coupon', bizMethod = 'coupon';
 let editingOfferId = null;
 let offerImageData = null;
+const MEMBER_FEE = 1.99, BUSINESS_FEE = 99;
+const TOKEN_KEY = 'circulo:token';
 
 /* ---------- helpers ---------- */
 const $ = s => document.querySelector(s);
 const esc = s => (s||'').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-function genCode(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const p=()=>Array.from({length:4},()=>a[Math.random()*a.length|0]).join(''); return 'EC-'+p()+'-'+p(); }
-function genToken(){ const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>a[Math.random()*a.length|0]).join(''); }
-function memNum(n){ return 'EC-'+new Date().getFullYear()+'-'+String(n).padStart(4,'0'); }
-function expDate(){ const d=new Date(); d.setFullYear(d.getFullYear()+1); return String(d.getMonth()+1).padStart(2,'0')+' / '+String(d.getFullYear()).slice(2); }
-function showAlert(id,msg,type){ const e=$('#'+id); e.textContent=msg; e.className='alert '+type+' show'; setTimeout(()=>e.classList.remove('show'),4200); }
+function showAlert(id,msg,type){ const e=$('#'+id); if(!e) return; e.textContent=msg; e.className='alert '+type+' show'; setTimeout(()=>e.classList.remove('show'),4200); }
 function makeQR(el,text,size){ try{ el.innerHTML=''; new QRCode(el,{text,width:size,height:size,colorDark:'#14110E',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M}); }catch(e){ console.error('QR error',e); el.innerHTML='<div style="font-size:8px;color:#9A9286;padding:6px;text-align:center">QR</div>'; } }
+function fmtDate(iso){ if(!iso) return '—'; try{ return new Date(iso).toLocaleDateString('es'); }catch(e){ return '—'; } }
 
-async function save(){ await Store.set(K.members,DB.members); await Store.set(K.biz,DB.biz); await Store.set(K.offers,DB.offers); await Store.set(K.coupons,DB.coupons); await Store.set(K.counters,DB.counters); await Store.set(K.contacts,DB.contacts); await Store.set(K.session,DB.session); }
+/* ---------- capa de API (fetch) ---------- */
+const API = {
+  async req(method, path, body, opts){
+    opts = opts || {};
+    const headers = { 'Content-Type':'application/json' };
+    if(Session.token) headers['Authorization'] = 'Bearer ' + Session.token;
+    if(opts.pin) headers['X-Admin-Pin'] = opts.pin;
+    let res;
+    try{
+      res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    }catch(e){
+      return { ok:false, status:0, data:{ error:'No hay conexión con el servidor.' } };
+    }
+    let data = {};
+    try{ data = await res.json(); }catch(e){ data = {}; }
+    return { ok: res.ok, status: res.status, data };
+  },
+  get(p,o){ return this.req('GET',p,null,o); },
+  post(p,b,o){ return this.req('POST',p,b,o); },
+  put(p,b,o){ return this.req('PUT',p,b,o); },
+  del(p,o){ return this.req('DELETE',p,null,o); },
+};
+
+function setSession(token, role, profile){
+  Session.token = token; Session.role = role; Session.profile = profile;
+  if(token) localStorage.setItem(TOKEN_KEY, token);
+}
+function clearSession(){
+  Session.token = null; Session.role = null; Session.profile = null;
+  localStorage.removeItem(TOKEN_KEY);
+}
+function curMember(){ return Session.role === 'member' ? Session.profile : null; }
+function curBiz(){ return Session.role === 'business' ? Session.profile : null; }
+
+/* ---------- ofertas (caché en memoria) ---------- */
+function normOffer(o){ return { id:o.id, bizId:o.business_id, biz:o.business, cat:o.category, title:o.title, terms:o.terms, image:o.image }; }
+async function loadOffers(){
+  const r = await API.get('/api/offers');
+  OFFERS = (r.ok && r.data.offers) ? r.data.offers.map(normOffer) : [];
+}
 
 /* ============================================================ INIT */
 async function init(){
-  DB.members  = await Store.get(K.members, []);
-  DB.biz      = await Store.get(K.biz, []);
-  DB.offers   = await Store.get(K.offers, []);
-  DB.coupons  = await Store.get(K.coupons, {});
-  DB.counters = await Store.get(K.counters, {member:0,business:0,offer:0});
-  DB.contacts = await Store.get(K.contacts, []);
-  DB.session  = await Store.get(K.session, null);
-  const seeded = await Store.get(K.seeded, false);
-  if(!seeded){ await seed(); await Store.set(K.seeded, true); }
-  // Migración: cuentas viejas sin contraseña reciben demo123, se asegura el cliente demo y se convierte la sesión antigua a {email}
-  let _mig=false;
-  DB.biz.forEach(b=>{ if(!b.password){ b.password='demo123'; _mig=true; } });
-  DB.members.forEach(m=>{ if(!m.password){ m.password='demo123'; _mig=true; } });
-  if(!DB.members.find(m=>m.email==='cliente@demo.com')){
-    DB.counters.member=(DB.counters.member||0)+1;
-    DB.members.push({ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name:'Cliente Demo', email:'cliente@demo.com', phone:'(305) 555-0001', password:'demo123', tier:'FUNDADOR', method:'demo', couponCode:null, exp:'De por vida', token:genToken(), created:Date.now() });
-    _mig=true;
-  }
-  if(DB.session && DB.session.id && !DB.session.email){
-    const acc = DB.session.role==='business' ? DB.biz.find(x=>x.id===DB.session.id) : DB.members.find(x=>x.id===DB.session.id);
-    DB.session = acc ? {email:acc.email} : null; _mig=true;
-  }
-  if(_mig) await save();
+  await restoreSession();
+  await loadOffers();
   makeQR($('#heroQR'),'EL CÍRCULO',56);
   renderAll();
   applySession();
 }
-
-async function seed(){
-  const samples = [
-    {name:'Café Habana 1958', cat:'Restaurante', title:'15% de descuento', terms:'En el total de la cuenta. No acumulable con otras promociones.', email:'hola@habana1958.com', phone:'(305) 555-0158'},
-    {name:'Barbería El Clásico', cat:'Servicios', title:'Corte + barba por $25', terms:'De lunes a jueves. Solo con cita previa.', email:'citas@elclasico.com', phone:'(305) 555-0190'},
-    {name:'Taller AutoPro Miami', cat:'Automotriz', title:'Cambio de aceite desde $39', terms:'Incluye filtro. Vehículos hasta 5 cuartos de aceite.', email:'taller@autopromiami.com', phone:'(305) 555-0111'},
-    {name:'Dulce Caribe Bakery', cat:'Restaurante', title:'2x1 en pasteles', terms:'Válido los martes. Igual o menor valor.', email:'pedidos@dulcecaribe.com', phone:'(305) 555-0177'},
-    {name:'Glow Spa Brickell', cat:'Belleza', title:'30% en tu primera visita', terms:'Clientes nuevos. Reserva con 24h de anticipación.', email:'spa@glowbrickell.com', phone:'(305) 555-0130'}
-  ];
-  samples.forEach(s=>{
-    DB.counters.business++; const bid='B'+DB.counters.business;
-    DB.biz.push({id:bid,name:s.name,cat:s.cat,email:s.email,phone:s.phone,password:'demo123',created:Date.now()});
-    DB.counters.offer++; DB.offers.push({id:'O'+DB.counters.offer,bizId:bid,biz:s.name,cat:s.cat,title:s.title,terms:s.terms,created:Date.now()});
-  });
-  DB.counters.member++;
-  DB.members.push({ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name:'Cliente Demo', email:'cliente@demo.com', phone:'(305) 555-0001', password:'demo123', tier:'FUNDADOR', method:'demo', couponCode:null, exp:'De por vida', token:genToken(), created:Date.now() });
-  DB.coupons['EC-DEMO-2026'] = {type:'member',active:true,note:'Cupón de prueba',created:Date.now(),uses:[]};
-  await save();
+async function restoreSession(){
+  const token = localStorage.getItem(TOKEN_KEY);
+  if(!token){ clearSession(); return; }
+  Session.token = token;
+  const r = await API.get('/api/me');
+  if(r.ok && r.data.profile){ Session.role = r.data.role; Session.profile = r.data.profile; }
+  else { clearSession(); }
 }
 
 /* ============================================================ NAV */
@@ -908,17 +901,13 @@ function go(v){
 }
 
 /* ============================================================ SESSION */
-function curMember(){ return DB.session && DB.session.email ? DB.members.find(m=>m.email===DB.session.email) : null; }
-function curBiz(){ return DB.session && DB.session.email ? DB.biz.find(b=>b.email===DB.session.email) : null; }
-
 function applySession(){
   const box=$('#sessBox'), txt=$('#sessTxt'), lo=$('#logoutBtn');
   const m=curMember(), b=curBiz();
-  if(m){ box.classList.add('in'); lo.style.display='inline-flex'; txt.textContent=m.name.split(' ')[0]+(b?' · Miembro + Negocio':' · Miembro'); return; }
+  if(m){ box.classList.add('in'); lo.style.display='inline-flex'; txt.textContent=m.name.split(' ')[0]+' · Miembro'; return; }
   if(b){ box.classList.add('in'); lo.style.display='inline-flex'; txt.textContent=b.name+' · Negocio'; return; }
   box.classList.remove('in'); txt.textContent='Invitado'; lo.style.display='none';
 }
-
 function goToMyArea(){
   const m=curMember(), b=curBiz();
   if(m) go('carnet');
@@ -932,8 +921,8 @@ function closeContact(){ $('#contactModal').classList.remove('show'); }
 async function submitContact(){
   const name=$('#ctName').value.trim(), email=$('#ctEmail').value.trim(), desc=$('#ctDesc').value.trim();
   if(!name||!email||!desc){ showAlert('contactAlert','Completa todos los campos.','err'); return; }
-  DB.contacts.push({name, email, desc, at:Date.now()});
-  await save();
+  const r = await API.post('/api/contact', { name, email, message: desc });
+  if(!r.ok){ showAlert('contactAlert', r.data.error||'No se pudo enviar el mensaje.','err'); return; }
   if(adminUnlocked) renderAdmin();
   ['ctName','ctEmail','ctDesc'].forEach(i=>$('#'+i).value='');
   showAlert('contactOk','¡Mensaje enviado! Te responderemos pronto.','ok');
@@ -943,10 +932,12 @@ async function submitContact(){
 /* ============================================================ RENDER */
 function renderAll(){ renderStatsHero(); renderOffers(); renderCarnet(); renderBiz(); if(adminUnlocked) renderAdmin(); }
 
-function renderStatsHero(){
-  $('#mMembers').textContent=DB.members.length;
-  $('#mBiz').textContent=DB.biz.length;
-  $('#mOffers').textContent=DB.offers.length;
+async function renderStatsHero(){
+  const r = await API.get('/api/stats');
+  const s = r.ok ? r.data : { members:0, businesses:0, offers:OFFERS.length };
+  $('#mMembers').textContent = s.members;
+  $('#mBiz').textContent = s.businesses;
+  $('#mOffers').textContent = s.offers;
 }
 
 function offerCardHTML(o, unlocked){
@@ -965,8 +956,8 @@ function offerCardHTML(o, unlocked){
 
 function renderOffers(){
   const unlocked = !!curMember();
-  $('#featuredOffers').innerHTML = DB.offers.slice(0,3).map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas.</p>';
-  $('#allOffers').innerHTML = DB.offers.map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas publicadas.</p>';
+  $('#featuredOffers').innerHTML = OFFERS.slice(0,3).map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas.</p>';
+  $('#allOffers').innerHTML = OFFERS.map(o=>offerCardHTML(o,unlocked)).join('') || '<p class="empty">Aún no hay ofertas publicadas.</p>';
   $('#ofertasCta').style.display = unlocked ? 'none':'inline-flex';
   $('#ofertasSub').textContent = unlocked ? 'Tu membresía está activa. Muestra tu carnet en el local para aplicar el descuento.' : 'Hazte miembro para desbloquear todos los descuentos.';
 }
@@ -987,54 +978,50 @@ async function registerMember(){
   const name=$('#jName').value.trim(), email=$('#jEmail').value.trim().toLowerCase(), phone=$('#jPhone').value.trim(), pass=$('#jPass').value;
   if(!name||!email){ showAlert('joinAlert','Ingresa tu nombre y correo.','err'); return; }
   if(!pass||pass.length<4){ showAlert('joinAlert','Crea una contraseña de al menos 4 caracteres.','err'); return; }
-  if(DB.members.find(m=>m.email===email)){ showAlert('joinAlert','Ese correo ya tiene una cuenta. Entra en "Mi carnet".','err'); return; }
-  let method='demo', couponCode=null;
   if(joinMethod==='coupon'){
     const code=$('#jCoupon').value.trim().toUpperCase();
-    const c=DB.coupons[code];
-    if(!c){ showAlert('joinAlert','Cupón no válido.','err'); return; }
-    if(c.active===false){ showAlert('joinAlert','Ese cupón está desactivado.','err'); return; }
-    if(c.type!=='member'){ showAlert('joinAlert','Ese cupón es para negocios, no para membresía.','err'); return; }
-    c.uses=c.uses||[]; c.uses.push({name, email, role:'member', at:Date.now()}); method='cupón'; couponCode=code;
+    const v = await API.get('/api/validate/'+encodeURIComponent(code));
+    const c = v.data && v.data.coupon;
+    if(!v.ok || v.data.type!=='coupon' || !c){ showAlert('joinAlert','Cupón no válido.','err'); return; }
+    if(!c.active){ showAlert('joinAlert','Ese cupón está desactivado.','err'); return; }
+    if(c.kind!=='member'){ showAlert('joinAlert','Ese cupón es para negocios, no para membresía.','err'); return; }
   }
-  DB.counters.member++;
-  const m={ id:'M'+DB.counters.member, num:memNum(DB.counters.member), name, email, phone, password:pass, tier:'MIEMBRO', method, couponCode, exp:'De por vida', token:genToken(), created:Date.now() };
-  DB.members.push(m); DB.session={email:m.email};
-  await save();
-  closeJoin(); applySession(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+  const r = await API.post('/api/register/member', { name, email, phone, password: pass });
+  if(!r.ok){ showAlert('joinAlert', r.data.error||'No se pudo crear la cuenta.','err'); return; }
+  setSession(r.data.token, 'member', r.data.member);
+  closeJoin(); applySession();
+  await loadOffers(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
   ['jName','jEmail','jPhone','jPass','jCoupon'].forEach(i=>$('#'+i).value='');
   go('carnet');
 }
 
-function doLogin(email, pass, alertId){
+async function doLogin(email, pass, alertId){
   email=(email||'').trim().toLowerCase();
   if(!email){ showAlert(alertId,'Ingresa tu correo.','err'); return; }
-  const m=DB.members.find(x=>x.email===email);
-  const b=DB.biz.find(x=>x.email===email);
-  if(!m && !b){ showAlert(alertId,'No encontramos una cuenta con ese correo.','err'); return; }
-  const passOK = (m && (m.password||'')===pass) || (b && (b.password||'')===pass);
-  if(!passOK){ showAlert(alertId,'Contraseña incorrecta.','err'); return; }
-  DB.session={email:email}; Store.set(K.session,DB.session);
+  const r = await API.post('/api/login', { email, password: pass });
+  if(!r.ok){ showAlert(alertId, r.data.error||'Correo o contraseña incorrectos.','err'); return; }
+  setSession(r.data.token, r.data.role, r.data.profile);
   ['lookupPass','bizLoginPass'].forEach(i=>{ const el=$('#'+i); if(el) el.value=''; });
   applySession(); renderOffers(); renderCarnet(); renderBiz();
-  go(m ? 'carnet' : 'negocios');
+  go(r.data.role==='member' ? 'carnet' : 'negocios');
 }
 function loginMember(){ doLogin($('#lookupEmail').value, $('#lookupPass').value, 'lookupAlert'); }
-function logoutMember(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); }
-function logout(){ DB.session=null; Store.set(K.session,null); applySession(); renderOffers(); renderCarnet(); renderBiz(); go('inicio'); }
+function logoutMember(){ clearSession(); applySession(); renderOffers(); renderCarnet(); }
+function logout(){ clearSession(); applySession(); renderOffers(); renderCarnet(); renderBiz(); go('inicio'); }
 
 function renderCarnet(){
   const m = curMember();
   $('#carnetEmpty').style.display = m ? 'none':'block';
   $('#carnetShow').style.display = m ? 'block':'none';
   if(!m) return;
-  $('#mcTier').textContent=m.tier; $('#mcNum').textContent=m.num; $('#mcNum2').textContent=m.num;
-  $('#mcName').textContent=m.name; $('#mcExp').textContent=m.exp;
+  const num = m.member_number || '—';
+  const exp = 'De por vida';
+  $('#mcTier').textContent=m.tier; $('#mcNum').textContent=num; $('#mcNum2').textContent=num;
+  $('#mcName').textContent=m.name; $('#mcExp').textContent=exp;
   $('#mcGreet').textContent='Hola, '+m.name.split(' ')[0];
-  makeQR($('#mcQR'),'CIRCULO|'+m.num+'|'+m.token,60);
-  // Mis datos
+  makeQR($('#mcQR'),'CIRCULO|'+num+'|'+(m.referral_code||num),60);
   $('#mdName').textContent=m.name; $('#mdEmail').textContent=m.email; $('#mdPhone').textContent=m.phone||'—';
-  $('#mdSince').textContent=new Date(m.created).toLocaleDateString('es'); $('#mdNum').textContent=m.num;
+  $('#mdSince').textContent=fmtDate(m.created_at); $('#mdNum').textContent=num;
   $('#mdView').style.display='grid'; $('#mdEdit').style.display='none'; $('#mdEditBtn').style.display='inline-flex';
 }
 
@@ -1048,9 +1035,9 @@ async function saveMyData(){
   const m=curMember(); if(!m) return;
   const name=$('#mdInName').value.trim(), email=$('#mdInEmail').value.trim().toLowerCase(), phone=$('#mdInPhone').value.trim();
   if(!name||!email){ showAlert('mdAlert','Nombre y correo son obligatorios.','err'); return; }
-  if(DB.members.some(x=>x.id!==m.id && x.email===email)){ showAlert('mdAlert','Ese correo ya está en uso por otro miembro.','err'); return; }
-  m.name=name; m.email=email; m.phone=phone;
-  await save();
+  const r = await API.post('/api/me/update', { name, email, phone });
+  if(!r.ok){ showAlert('mdAlert', r.data.error||'No se pudo actualizar.','err'); return; }
+  Session.profile = r.data.profile;
   applySession(); renderCarnet(); if(adminUnlocked) renderAdmin();
   showAlert('mdAlert','Datos actualizados.','ok');
 }
@@ -1062,19 +1049,17 @@ async function registerBusiness(){
   const name=$('#bName').value.trim(), cat=$('#bCat').value, email=$('#bEmail').value.trim().toLowerCase(), phone=$('#bPhone').value.trim(), pass=$('#bPass').value;
   if(!name||!email){ showAlert('bizAlert','Ingresa el nombre y correo del negocio.','err'); return; }
   if(!pass||pass.length<4){ showAlert('bizAlert','Crea una contraseña de al menos 4 caracteres.','err'); return; }
-  if(DB.biz.find(x=>x.email===email)){ showAlert('bizAlert','Ese correo ya tiene un negocio. Entra arriba.','err'); return; }
-  let method='demo';
   if(bizMethod==='coupon'){
-    const code=$('#bCoupon').value.trim().toUpperCase(); const c=DB.coupons[code];
-    if(!c){ showAlert('bizAlert','Cupón no válido.','err'); return; }
-    if(c.active===false){ showAlert('bizAlert','Ese cupón está desactivado.','err'); return; }
-    if(c.type!=='business'){ showAlert('bizAlert','Ese cupón es para membresías, no para negocios.','err'); return; }
-    c.uses=c.uses||[]; c.uses.push({name, email, role:'business', at:Date.now()}); method='cupón';
+    const code=$('#bCoupon').value.trim().toUpperCase();
+    const v = await API.get('/api/validate/'+encodeURIComponent(code));
+    const c = v.data && v.data.coupon;
+    if(!v.ok || v.data.type!=='coupon' || !c){ showAlert('bizAlert','Cupón no válido.','err'); return; }
+    if(!c.active){ showAlert('bizAlert','Ese cupón está desactivado.','err'); return; }
+    if(c.kind!=='business'){ showAlert('bizAlert','Ese cupón es para membresías, no para negocios.','err'); return; }
   }
-  DB.counters.business++;
-  const b={ id:'B'+DB.counters.business, name, cat, email, phone, password:pass, method, created:Date.now() };
-  DB.biz.push(b); DB.session={email:b.email};
-  await save();
+  const r = await API.post('/api/register/business', { name, category: cat, email, phone, password: pass });
+  if(!r.ok){ showAlert('bizAlert', r.data.error||'No se pudo registrar el negocio.','err'); return; }
+  setSession(r.data.token, 'business', r.data.business);
   applySession(); renderStatsHero(); if(adminUnlocked) renderAdmin();
   ['bName','bEmail','bPhone','bPass','bCoupon'].forEach(i=>$('#'+i).value='');
   renderBiz();
@@ -1088,27 +1073,28 @@ function renderBiz(){
   $('#bizDash').style.display = b ? 'block':'none';
   if(!b) return;
   $('#bizDashName').textContent=b.name;
-  const mine=DB.offers.filter(o=>o.bizId===b.id);
-  $('#myOffers').innerHTML = mine.length ? mine.map(o=>`<div class="panel" style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div><div class="cat" style="color:var(--gold-lt)">${esc(o.cat)}</div><div style="font-family:Fraunces;font-size:18px;color:var(--gold-lt);margin:2px 0 4px">${esc(o.title)}</div><div style="color:var(--muted);font-size:13px">${esc(o.terms)}</div></div><div style="display:flex;flex-direction:column;gap:6px;flex:none"><button class="copy-b" onclick="startEditOffer('${o.id}')">Editar</button><button class="copy-b" onclick="deleteOffer('${o.id}')">Eliminar</button></div></div></div>`).join('') : '<p class="empty">Aún no has publicado ofertas.</p>';
+  const mine=OFFERS.filter(o=>o.bizId===b.id);
+  $('#myOffers').innerHTML = mine.length ? mine.map(o=>`<div class="panel" style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div><div class="cat" style="color:var(--gold-lt)">${esc(o.cat)}</div><div style="font-family:Fraunces;font-size:18px;color:var(--gold-lt);margin:2px 0 4px">${esc(o.title)}</div><div style="color:var(--muted);font-size:13px">${esc(o.terms)}</div></div><div style="display:flex;flex-direction:column;gap:6px;flex:none"><button class="copy-b" onclick="startEditOffer(${o.id})">Editar</button><button class="copy-b" onclick="deleteOffer(${o.id})">Eliminar</button></div></div></div>`).join('') : '<p class="empty">Aún no has publicado ofertas.</p>';
 }
 
 async function publishOffer(){
   const b=curBiz();
+  if(!b){ showAlert('offerOk','Inicia sesión como negocio.','err'); return; }
   const title=$('#oTitle').value.trim(), terms=$('#oTerms').value.trim();
   if(!title){ showAlert('offerOk','Escribe el título del descuento.','err'); return; }
+  let r;
   if(editingOfferId){
-    const o=DB.offers.find(x=>x.id===editingOfferId);
-    if(o){ o.title=title; o.terms=terms||'Consulta términos en el local.'; o.image=offerImageData||o.image; }
+    r = await API.put('/api/offers/'+editingOfferId, { title, terms: terms||'Consulta términos en el local.', image: offerImageData });
+    if(!r.ok){ showAlert('offerOk', (r.data&&r.data.error)||'No se pudo actualizar.','err'); return; }
     cancelEditOffer();
-    await save();
     showAlert('offerOk','Oferta actualizada.','ok');
   } else {
-    DB.counters.offer++;
-    DB.offers.push({id:'O'+DB.counters.offer,bizId:b.id,biz:b.name,cat:b.cat,title,terms:terms||'Consulta términos en el local.',image:offerImageData,created:Date.now()});
-    await save();
+    r = await API.post('/api/offers', { title, terms: terms||'Consulta términos en el local.', image: offerImageData });
+    if(!r.ok){ showAlert('offerOk', (r.data&&r.data.error)||'No se pudo publicar.','err'); return; }
     resetOfferForm();
     showAlert('offerOk','Oferta publicada. Ya es visible para los miembros.','ok');
   }
+  await loadOffers();
   renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
 }
 function resetOfferForm(){
@@ -1116,7 +1102,7 @@ function resetOfferForm(){
   $('#oImage').value=''; $('#oImgPreview').style.display='none';
 }
 function startEditOffer(id){
-  const o=DB.offers.find(x=>x.id===id); if(!o) return;
+  const o=OFFERS.find(x=>x.id===id); if(!o) return;
   editingOfferId=id;
   $('#oTitle').value=o.title; $('#oTerms').value=o.terms;
   offerImageData = o.image||null;
@@ -1154,95 +1140,114 @@ function resizeImage(file,w,h,cb){
   };
   reader.readAsDataURL(file);
 }
-async function deleteOffer(id){ DB.offers=DB.offers.filter(o=>o.id!==id); await save(); renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin(); }
-function logoutBusiness(){ DB.session=null; Store.set(K.session,null); applySession(); renderBiz(); }
+async function deleteOffer(id){
+  const r = await API.del('/api/offers/'+id);
+  if(!r.ok){ showAlert('offerOk', (r.data&&r.data.error)||'No se pudo eliminar.','err'); return; }
+  await loadOffers();
+  renderBiz(); renderOffers(); renderStatsHero(); if(adminUnlocked) renderAdmin();
+}
+function logoutBusiness(){ clearSession(); applySession(); renderBiz(); }
 
-/* ============================================================ VALIDATE */
-function validateMember(){
+/* ============================================================ VALIDATE (negocios) */
+async function validateMember(){
   const raw=$('#valInput').value.trim().toUpperCase();
   const box=$('#valResult');
   if(!raw){ box.className='vresult'; box.innerHTML=''; return; }
   box.className='vresult show';
-
-  // ¿Es un cupón?
-  const c=DB.coupons[raw];
-  if(c){
-    const active=c.active!==false; const uses=(c.uses||[]);
+  const r = await API.get('/api/validate/'+encodeURIComponent(raw));
+  if(r.data && r.data.type==='coupon' && r.data.coupon){
+    const c=r.data.coupon; const active=!!c.active;
     box.innerHTML=`<div class="vcard ${active?'valid':'invalid'}"><h3>${active?'✓ Cupón activo':'✕ Cupón inactivo'}</h3>
       <div style="margin-top:12px">
-        <div class="vrow"><span>Código</span><span style="font-family:'JetBrains Mono'">${esc(raw)}</span></div>
-        <div class="vrow"><span>Tipo</span><span>${c.type==='member'?'Membresía':'Negocio'}</span></div>
+        <div class="vrow"><span>Código</span><span style="font-family:'JetBrains Mono'">${esc(c.code)}</span></div>
+        <div class="vrow"><span>Tipo</span><span>${c.kind==='member'?'Membresía':'Negocio'}</span></div>
         <div class="vrow"><span>Estatus</span><span>${active?'Activo':'Inactivo'}</span></div>
-        <div class="vrow"><span>Veces usado</span><span>${uses.length}</span></div>
-      </div>
-      ${uses.length?`<div style="margin-top:12px;font-size:13px;color:var(--muted)"><b>Usado por:</b><br>${uses.map(u=>esc(u.name)+' · '+esc(u.email)).join('<br>')}</div>`:''}</div>`;
+        <div class="vrow"><span>Veces usado</span><span>${c.uses||0}</span></div>
+      </div></div>`;
     return;
   }
-
-  // ¿Es un miembro?
-  let num=raw, token=null;
-  if(raw.startsWith('CIRCULO|')){ const p=raw.split('|'); num=p[1]; token=p[2]; }
-  const m=DB.members.find(x=>x.num.toUpperCase()===num);
-  if(!m){ box.innerHTML=`<div class="vcard invalid"><h3>✕ No encontrado</h3><p style="color:var(--muted);margin-top:6px">No existe ningún miembro ni cupón con ese código.</p></div>`; return; }
-  if(token && token!==m.token){ box.innerHTML=`<div class="vcard invalid"><h3>✕ Código alterado</h3><p style="color:var(--muted);margin-top:6px">El QR no coincide con el número de miembro.</p></div>`; return; }
-  box.innerHTML=`<div class="vcard valid"><h3>✓ Membresía válida</h3>
-    <div style="margin-top:12px">
-      <div class="vrow"><span>Miembro</span><span>${esc(m.name)}</span></div>
-      <div class="vrow"><span>Número</span><span style="font-family:'JetBrains Mono'">${esc(m.num)}</span></div>
-      <div class="vrow"><span>Estatus</span><span>Activa</span></div>
-      <div class="vrow"><span>Vigencia</span><span>${esc(m.exp)}</span></div>
-    </div>
-    <button class="btn btn-gold btn-sm btn-block" style="margin-top:16px" onclick="confirmRedeem(this)">Registrar canje y aplicar descuento</button></div>`;
+  if(r.data && r.data.type==='member' && r.data.member){
+    const m=r.data.member;
+    box.innerHTML=`<div class="vcard valid"><h3>✓ Membresía válida</h3>
+      <div style="margin-top:12px">
+        <div class="vrow"><span>Miembro</span><span>${esc(m.name)}</span></div>
+        <div class="vrow"><span>Número</span><span style="font-family:'JetBrains Mono'">${esc(m.member_number)}</span></div>
+        <div class="vrow"><span>Nivel</span><span>${esc(m.tier)}</span></div>
+        <div class="vrow"><span>Estatus</span><span>${esc(m.status||'Activa')}</span></div>
+      </div>
+      <button class="btn btn-gold btn-sm btn-block" style="margin-top:16px" onclick="confirmRedeem(this)">Registrar canje y aplicar descuento</button></div>`;
+    return;
+  }
+  box.innerHTML=`<div class="vcard invalid"><h3>✕ No encontrado</h3><p style="color:var(--muted);margin-top:6px">No existe ningún miembro ni cupón con ese código.</p></div>`;
 }
 function confirmRedeem(btn){ btn.textContent='✓ Descuento aplicado'; btn.disabled=true; btn.style.opacity=.7; }
 
 /* ============================================================ ADMIN */
-function checkPin(){ if($('#pinInput').value===ADMIN_PIN){ adminUnlocked=true; $('#adminGate').style.display='none'; $('#adminContent').style.display='block'; renderAdmin(); } else showAlert('pinAlert','PIN incorrecto.','err'); }
+async function checkPin(){
+  const pin=$('#pinInput').value;
+  const r = await API.get('/api/admin/stats', { pin });
+  if(!r.ok){ showAlert('pinAlert','PIN incorrecto.','err'); return; }
+  adminPin = pin; adminUnlocked = true;
+  $('#adminGate').style.display='none'; $('#adminContent').style.display='block';
+  renderAdmin();
+}
 
-function renderAdmin(){
-  $('#sMembers').textContent=DB.members.length;
-  $('#sBiz').textContent=DB.biz.length;
-  $('#sOffers').textContent=DB.offers.length;
-  const totalUses=Object.values(DB.coupons).reduce((s,c)=>s+((c.uses||[]).length),0);
-  $('#sCoupons').textContent=totalUses;
+async function renderAdmin(){
+  if(!adminUnlocked) return;
+  const pin = adminPin;
+  const [st, mem, biz, con, cou] = await Promise.all([
+    API.get('/api/admin/stats',{pin}),
+    API.get('/api/admin/members',{pin}),
+    API.get('/api/admin/businesses',{pin}),
+    API.get('/api/admin/contacts',{pin}),
+    API.get('/api/admin/coupons',{pin}),
+  ]);
+  const stats = st.ok ? st.data : {};
+  $('#sMembers').textContent = stats.members||0;
+  $('#sBiz').textContent = stats.businesses||0;
+  $('#sOffers').textContent = stats.offers||0;
+  $('#sCoupons').textContent = stats.coupon_uses||0;
 
-  const ct=$('#couponTable tbody'); const codes=Object.keys(DB.coupons);
-  ct.innerHTML = codes.length ? codes.map(code=>{
-    const c=DB.coupons[code]; const active=c.active!==false; const uses=(c.uses||[]);
+  const coupons = cou.ok ? (cou.data.coupons||[]) : [];
+  const ct=$('#couponTable tbody');
+  ct.innerHTML = coupons.length ? coupons.map(c=>{
+    const active=!!c.active; const uses=c.used_by||[];
     const statusBadge = active ? '<span class="badge ok">● Activo</span>' : '<span class="badge muted">○ Inactivo</span>';
-    const main = `<tr><td><code style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(code)}</code></td><td>${c.type==='member'?'Miembro':'Negocio'}</td><td>${statusBadge}</td><td>${uses.length}${uses.length?` <button class="copy-b" onclick="toggleUses('${code}')">ver</button>`:''}</td><td><button class="copy-b" onclick="toggleCoupon('${code}')">${active?'Desactivar':'Activar'}</button></td></tr>`;
-    const detail = uses.length ? `<tr id="uses-${code}" style="display:none"><td colspan="5" style="background:var(--bg2)"><div style="font-size:12.5px;color:var(--muted);padding:4px 2px;line-height:1.7">${uses.map(u=>`${esc(u.name)} · ${esc(u.email)} · ${new Date(u.at).toLocaleDateString('es')}`).join('<br>')}</div></td></tr>` : '';
+    const main = `<tr><td><code style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(c.code)}</code></td><td>${c.kind==='member'?'Miembro':'Negocio'}</td><td>${statusBadge}</td><td>${c.uses||0}${uses.length?` <button class="copy-b" onclick="toggleUses('${esc(c.code)}')">ver</button>`:''} <button class="copy-b" onclick="toggleCoupon('${esc(c.code)}')">${active?'Desactivar':'Activar'}</button></td></tr>`;
+    const detail = uses.length ? `<tr id="uses-${esc(c.code)}" style="display:none"><td colspan="4" style="background:var(--bg2)"><div style="font-size:12.5px;color:var(--muted);padding:4px 2px;line-height:1.7">${uses.map(u=>`${esc(u.name||'—')} · ${esc(u.email||'—')}`).join('<br>')}</div></td></tr>` : '';
     return main+detail;
-  }).join('') : '<tr><td colspan="5" class="empty">Sin cupones aún.</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="empty">Sin cupones aún.</td></tr>';
 
+  const members = mem.ok ? (mem.data.members||[]) : [];
   const mt=$('#memberTable tbody');
-  mt.innerHTML = DB.members.length ? DB.members.map(m=>`<tr><td style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(m.num)}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td style="font-family:'JetBrains Mono'">${esc(m.password||'—')}</td><td>${new Date(m.created).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin miembros aún.</td></tr>';
+  mt.innerHTML = members.length ? members.map(m=>`<tr><td style="font-family:'JetBrains Mono';color:var(--gold-lt)">${esc(m.member_number||'—')}</td><td>${esc(m.name)}</td><td>${esc(m.email)}</td><td>${m.team_size||0}</td><td>${fmtDate(m.created_at)}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin miembros aún.</td></tr>';
 
+  const businesses = biz.ok ? (biz.data.businesses||[]) : [];
   const bt=$('#bizTable tbody');
-  bt.innerHTML = DB.biz.length ? DB.biz.map(b=>{ const n=DB.offers.filter(o=>o.bizId===b.id).length; return `<tr><td>${esc(b.name)}</td><td>${esc(b.cat)}</td><td>${esc(b.email)}</td><td style="font-family:'JetBrains Mono'">${esc(b.password||'—')}</td><td>${n}</td></tr>`; }).join('') : '<tr><td colspan="5" class="empty">Sin negocios aún.</td></tr>';
+  bt.innerHTML = businesses.length ? businesses.map(b=>`<tr><td>${esc(b.name)}</td><td>${esc(b.category||'—')}</td><td>${esc(b.email)}</td><td>${esc(b.phone||'—')}</td><td>${b.offers||0}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">Sin negocios aún.</td></tr>';
 
+  const contacts = con.ok ? (con.data.contacts||[]) : [];
   const cont=$('#contactTable tbody');
-  cont.innerHTML = (DB.contacts&&DB.contacts.length) ? DB.contacts.slice().reverse().map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td style="max-width:340px">${esc(c.desc)}</td><td>${new Date(c.at).toLocaleDateString('es')}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">Sin mensajes aún.</td></tr>';
+  cont.innerHTML = contacts.length ? contacts.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.email)}</td><td style="max-width:340px">${esc(c.message)}</td><td>${fmtDate(c.created_at)}</td></tr>`).join('') : '<tr><td colspan="4" class="empty">Sin mensajes aún.</td></tr>';
 }
 
 async function generateCoupons(){
   const type=$('#cType').value, qty=Math.min(50,Math.max(1,parseInt($('#cQty').value)||1)), note=$('#cNote').value.trim();
-  const made=[];
-  for(let i=0;i<qty;i++){ let code; do{ code=genCode(); }while(DB.coupons[code]); DB.coupons[code]={type,active:true,note,created:Date.now(),uses:[]}; made.push(code); }
-  await save();
+  const r = await API.post('/api/admin/coupons', { kind:type, qty, note }, { pin: adminPin });
+  if(!r.ok){ showAlert('pinAlert', (r.data&&r.data.error)||'No se pudieron generar.','err'); return; }
+  const made = r.data.codes||[];
   $('#newCodes').innerHTML = `<div style="font-size:12.5px;color:var(--muted);margin:6px 0 2px">${made.length} cupón(es) generado(s) — cópialos y compártelos:</div>` + made.map(c=>`<div class="code-row"><code>${c}</code><button class="copy-b" onclick="navigator.clipboard.writeText('${c}');this.textContent='✓ Copiado'">Copiar</button></div>`).join('');
   renderAdmin();
 }
 
-async function toggleCoupon(code){ const c=DB.coupons[code]; if(!c) return; const cur=c.active!==false; c.active=!cur; await save(); renderAdmin(); }
+async function toggleCoupon(code){
+  const r = await API.post('/api/admin/coupons/'+encodeURIComponent(code)+'/toggle', null, { pin: adminPin });
+  if(r.ok) renderAdmin();
+}
 function toggleUses(code){ const r=document.getElementById('uses-'+code); if(r) r.style.display=(r.style.display==='none'?'table-row':'none'); }
 
-async function resetAll(){
-  if(!confirm('¿Borrar todos los datos de la demo y volver a empezar?')) return;
-  DB={ members:[], biz:[], offers:[], coupons:{}, counters:{member:0,business:0,offer:0}, contacts:[], session:null };
-  await Store.set(K.seeded,false); await save();
-  await seed(); await Store.set(K.seeded,true);
-  adminUnlocked=true; applySession(); renderAll(); renderAdmin();
+function resetAll(){
+  alert('Los datos ahora viven en el servidor. Para reiniciar la base de datos de la demo, corre seed.py desde el servidor (Render → Shell → "python seed.py --reset").');
 }
 
 /* logo */

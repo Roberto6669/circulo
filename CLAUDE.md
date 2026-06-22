@@ -53,22 +53,29 @@ Lo construye **Roberto Escobar Citty**, RVP de Primerica en Miami. Por eso el pr
 
 ## 3. ⭐ DÓNDE ESTAMOS PARADOS (estado actual)
 
-- **Frontend:** versión **v1.9**, completo y funcional, PERO usa `localStorage` (datos por navegador,
-  NO compartidos). Su estructura interna está en la sección 11.
-- **Backend (Fase 1):** ✅ **COMPLETO y probado.** Auth con contraseñas encriptadas (scrypt), miembros,
-  negocios, ofertas, cupones, contacto, y los endpoints de **referidos y equipos**. Verificado con el test client.
-- **Despliegue:** el código completo está en GitHub (`Roberto6669/circulo`). Se está desplegando en
-  Render vía Blueprint. URL esperada: `https://circulo-backend.onrender.com`.
-- **🔴 PENDIENTE CLAVE — el frontend y el backend TODAVÍA NO están conectados.** El frontend usa
-  localStorage; la API existe aparte. **La Fase 2 es conectarlos.**
+- **Frontend:** versión **v2.0**, ✅ **conectado al API.** Ya NO usa `localStorage` para los datos:
+  todo pasa por `fetch` a `/api/...`. El token de login se guarda en `localStorage` y se manda en el
+  header `Authorization: Bearer`. Capa `API` + objeto `Session` (ver sección 11).
+- **Backend (Fase 1 + extras de Fase 2):** ✅ **COMPLETO y probado.** Auth con contraseñas encriptadas
+  (scrypt), miembros, negocios, ofertas, cupones, contacto, referidos/equipos. En la Fase 2 se agregaron:
+  `/api/stats` (público), `/api/me/update`, `PUT /api/offers/<id>`, `/api/validate/<code>`,
+  `GET /api/admin/coupons` y `POST /api/admin/coupons/<code>/toggle`. Verificado con 23 pruebas e2e (test client).
+- **Despliegue:** el código completo está en GitHub (`Roberto6669/circulo`), se despliega en Render vía
+  Blueprint. URL esperada: `https://circulo-backend.onrender.com`.
+- **✅ Fase 2 LISTA — frontend y backend conectados.** Lo siguiente es la **Fase 3 (pantalla "Mi equipo")**.
+
+> **Limitaciones conocidas (para retomar):** (1) el cupón en el registro se valida pero su "uso" NO se
+> registra en el server (no hay endpoint de canje aún), así que el contador de usos en admin queda en 0.
+> (2) El admin ya NO muestra contraseñas (el backend nunca las devuelve); ahora muestra Equipo/Teléfono.
+> (3) Una misma cuenta ya no puede ser cliente Y negocio a la vez (el login devuelve un solo rol).
+> (4) El botón "Resetear" del admin solo informa; para reiniciar datos se corre `seed.py` en el server.
 
 ## 4. Roadmap (fases)
 
 1. **Fase 1 — Backend ✅ HECHO.** API + base de datos + auth + referidos/equipos.
-2. **Fase 2 — Conectar el frontend a la API (← SIGUIENTE).** Reemplazar el `localStorage` por llamadas
-   `fetch` a `/api/...`. Guardar el token de login y mandarlo en cada llamada. El objeto `Store`/`DB`
-   del frontend pasa a hablar con el backend.
-3. **Fase 3 — Pantalla "Mi equipo".** Link de referido para compartir, referidos directos, árbol del
+2. **Fase 2 — Conectar el frontend a la API ✅ HECHO.** El `localStorage` de datos se reemplazó por
+   `fetch` a `/api/...`; el token se guarda y se manda en cada llamada (capa `API` + `Session`).
+3. **Fase 3 — Pantalla "Mi equipo" (← SIGUIENTE).** Link de referido para compartir, referidos directos, árbol del
    equipo, tamaño del equipo. (Backend ya listo: `/api/team`, `/api/referrals`.)
 4. **Fase 4 — Premios y promociones.** Puntos, rankings (`/api/admin/leaderboard` ya existe),
    recompensas por tamaño de equipo.
@@ -151,17 +158,23 @@ Base: la misma URL del sitio (llamadas relativas a `/api/...`). El token de logi
 - Variables de entorno: `DATABASE_URL` (lo pone Render solo), `SECRET_KEY` (lo genera Render), `ADMIN_PIN`.
 - **De aquí en adelante, cada cambio es solo `git push`** y Render redespliega automáticamente.
 
-## 11. El frontend (`static/index.html`) por dentro — para la Fase 2
+## 11. El frontend (`static/index.html`) por dentro — v2.0, conectado al API
 
 - **App de una sola página (SPA).** Vistas: `v-inicio`, `v-ofertas`, `v-carnet`, `v-negocios`,
   `v-admin`, `v-about`. Se cambian con `go(v)` que pone la clase `show` en `#v-<v>`.
-- **Datos:** objeto `DB` (members, biz, offers, coupons, counters, contacts, session) + objeto `Store`
-  que hoy lee/escribe en `localStorage`. **En la Fase 2, `Store` debe hablar con la API en vez de localStorage.**
-- **Sesión basada en correo:** `DB.session = { email }`. Helpers `curMember()` y `curBiz()` buscan por
-  email (permite que una cuenta sea cliente Y negocio a la vez). Login unificado: `doLogin(email, pass, alertId)`.
-- **Funciones clave:** `registerMember()`, `registerBusiness()` (con contraseña), `loginMember()`,
-  `loginBusiness()`, `logout()` (botón "Salir" en la barra superior), `publishOffer()`, `renderCarnet()`,
-  `renderBiz()`, `renderOffers()`, `renderAdmin()`.
+- **Capa de datos (Fase 2):** objeto `API` (`API.get/post/put/del`) que hace `fetch` a `/api/...`,
+  agrega el header `Authorization: Bearer <token>` si hay sesión, y `X-Admin-Pin` cuando se pasa `{pin}`.
+  Las ofertas se cachean en `OFFERS` (cargadas con `loadOffers()` y normalizadas con `normOffer`).
+- **Sesión:** objeto `Session = { token, role, profile }`. El token vive en `localStorage` (`circulo:token`);
+  `init()` lo restaura llamando a `/api/me`. Helpers `curMember()`/`curBiz()` leen de `Session.role`.
+  `setSession()` / `clearSession()` guardan/limpian. Login unificado: `doLogin(email, pass, alertId)`.
+- **Funciones clave:** `registerMember()`, `registerBusiness()`, `loginMember()`, `loginBusiness()`,
+  `logout()`, `saveMyData()` (→ `/api/me/update`), `publishOffer()` (POST/PUT), `deleteOffer()`,
+  `validateMember()` (→ `/api/validate/<code>`), `renderCarnet()`, `renderBiz()`, `renderOffers()`,
+  `renderAdmin()` (usa el PIN guardado en `adminPin`), `generateCoupons()`, `toggleCoupon()`.
+- **Mapeo de campos API→UI:** la oferta del API trae `business`/`category`/`business_id`; `normOffer`
+  los pasa a `biz`/`cat`/`bizId`. Los `id` de oferta ahora son **números** (no 'O1'): los `onclick`
+  pasan el id sin comillas. El carnet usa `member_number` (no `num`) y `referral_code` para el QR.
 - **Ofertas:** cada oferta tiene imagen (mitad superior); el negocio la sube y se redimensiona a 800×500
   en un canvas antes de guardar.
 - **Admin:** PIN 2026; tablas de miembros/negocios (muestran usuario y contraseña), cupones, contacto.
@@ -240,6 +253,6 @@ git push
 
 ---
 
-**Resumen en una frase:** El backend Flask + Postgres está LISTO y desplegándose en Render; el siguiente
-trabajo es la **Fase 2 — conectar el frontend (`static/index.html`) a la API** para que todo use la base
-de datos real y el sistema de equipos.
+**Resumen en una frase:** El backend Flask + Postgres y el frontend v2.0 ya están **conectados por el API**
+(Fases 1 y 2 hechas); todo usa la base de datos real. El siguiente trabajo es la **Fase 3 — pantalla
+"Mi equipo"** (link de referido + árbol del equipo, con `/api/team` y `/api/referrals` ya listos).

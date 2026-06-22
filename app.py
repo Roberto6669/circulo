@@ -129,6 +129,15 @@ def index():
 def health():
     return jsonify(ok=True, time=datetime.utcnow().isoformat())
 
+@app.get("/api/stats")
+def public_stats():
+    """Conteos públicos para el hero (sin datos sensibles)."""
+    return jsonify(
+        members=Member.query.count(),
+        businesses=Business.query.count(),
+        offers=Offer.query.count(),
+    )
+
 # --------------------------------------------------------------------------- #
 #  AUTENTICACIÓN
 # --------------------------------------------------------------------------- #
@@ -214,6 +223,26 @@ def login():
 def me(kind, user):
     return jsonify(role=kind, profile=user.to_dict())
 
+
+@app.post("/api/me/update")
+@login_required
+def update_me(kind, user):
+    """Actualiza nombre / teléfono / correo del usuario logueado."""
+    d = request.get_json(silent=True) or {}
+    name  = (d.get("name") or "").strip()
+    phone = (d.get("phone") or "").strip()
+    email = (d.get("email") or "").strip().lower()
+    if name:
+        user.name = name
+    user.phone = phone
+    if email and email != user.email:
+        Model = Member if kind == "member" else Business
+        if Model.query.filter(Model.email == email, Model.id != user.id).first():
+            return jsonify(error="Ese correo ya está en uso."), 409
+        user.email = email
+    db.session.commit()
+    return jsonify(role=kind, profile=user.to_dict())
+
 # --------------------------------------------------------------------------- #
 #  REFERIDOS / EQUIPOS
 # --------------------------------------------------------------------------- #
@@ -281,6 +310,24 @@ def create_offer(kind, user):
     return jsonify(offer=o.to_dict()), 201
 
 
+@app.put("/api/offers/<int:offer_id>")
+@login_required
+def update_offer(kind, user, offer_id):
+    o = db.session.get(Offer, offer_id)
+    if not o or (kind != "business") or o.business_id != user.id:
+        return jsonify(error="No autorizado."), 403
+    d = request.get_json(silent=True) or {}
+    title = (d.get("title") or "").strip()
+    if title:
+        o.title = title
+    if "terms" in d:
+        o.terms = (d.get("terms") or "").strip() or "Consulta términos en el local."
+    if d.get("image") is not None:
+        o.image = d.get("image")
+    db.session.commit()
+    return jsonify(offer=o.to_dict())
+
+
 @app.delete("/api/offers/<int:offer_id>")
 @login_required
 def delete_offer(kind, user, offer_id):
@@ -300,6 +347,29 @@ def check_coupon(code):
     if not c:
         return jsonify(found=False), 404
     return jsonify(found=True, coupon=c.to_dict())
+
+
+@app.get("/api/validate/<code>")
+def validate_code(code):
+    """Para los negocios: valida un número de miembro O un cupón.
+    Acepta el QR completo 'CIRCULO|EC-2026-0001|...' o el código pelado."""
+    raw = (code or "").strip().upper()
+    num = raw
+    if raw.startswith("CIRCULO|"):
+        parts = raw.split("|")
+        num = parts[1] if len(parts) > 1 else raw
+    m = Member.query.filter(
+        (Member.member_number == num) | (Member.referral_code == num)
+    ).first()
+    if m:
+        return jsonify(type="member", valid=True, member={
+            "name": m.name, "member_number": m.member_number,
+            "tier": m.tier, "status": "Activa",
+        })
+    c = Coupon.query.filter_by(code=num).first()
+    if c:
+        return jsonify(type="coupon", valid=bool(c.active), coupon=c.to_dict())
+    return jsonify(type="none", valid=False), 404
 
 # --------------------------------------------------------------------------- #
 #  CONTACTO
@@ -351,6 +421,24 @@ def admin_businesses():
 def admin_contacts():
     rows = Contact.query.order_by(Contact.created_at.desc()).all()
     return jsonify(contacts=[c.to_dict() for c in rows])
+
+
+@app.get("/api/admin/coupons")
+@admin_required
+def admin_list_coupons():
+    rows = Coupon.query.order_by(Coupon.created_at.desc()).all()
+    return jsonify(coupons=[c.to_dict() for c in rows])
+
+
+@app.post("/api/admin/coupons/<code>/toggle")
+@admin_required
+def admin_toggle_coupon(code):
+    c = Coupon.query.filter_by(code=code.strip().upper()).first()
+    if not c:
+        return jsonify(error="Cupón no encontrado."), 404
+    c.active = not c.active
+    db.session.commit()
+    return jsonify(coupon=c.to_dict())
 
 
 @app.post("/api/admin/coupons")
